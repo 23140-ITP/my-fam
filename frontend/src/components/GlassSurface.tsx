@@ -7,7 +7,7 @@ import {
   ViewStyle,
 } from "react-native";
 import { BlurView } from "expo-blur";
-import { GlassView } from "expo-glass-effect";
+import { GlassView, isGlassEffectAPIAvailable } from "expo-glass-effect";
 
 type GlassSurfaceProps = {
   children: React.ReactNode;
@@ -19,8 +19,14 @@ type GlassSurfaceProps = {
   testID?: string;
 };
 
-const nativeGlassAvailable =
-  Platform.OS === "ios" && Number(Platform.Version) >= 26;
+function canUseNativeGlass() {
+  if (Platform.OS !== "ios" || Number(Platform.Version) < 26) return false;
+  try {
+    return isGlassEffectAPIAvailable();
+  } catch {
+    return false;
+  }
+}
 
 export function GlassSurface({
   children,
@@ -31,6 +37,8 @@ export function GlassSurface({
   interactive = false,
   testID,
 }: GlassSurfaceProps) {
+  const nativeGlassAvailable = canUseNativeGlass();
+
   return (
     <View testID={testID} style={[styles.container, style]}>
       {nativeGlassAvailable ? (
