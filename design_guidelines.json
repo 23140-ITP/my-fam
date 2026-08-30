@@ -1,0 +1,188 @@
+{
+  "app_name": "My Fam",
+  "personality": "1 iOS-Native Clean (Structure) with 8 Hand-Drawn / Journal (Palette & Warmth)",
+  "personality_one_liner": "Warm, intimate, and emotionally engaging like a caring family, combining WhatsApp's structural clarity with iMessage's organic softness.",
+  "color": {
+    "surface": "#F8F6F1",
+    "onSurface": "#1F2A26",
+    "surfaceSecondary": "#FFFFFF",
+    "onSurfaceSecondary": "#1F2A26",
+    "surfaceTertiary": "#EAE6DF",
+    "onSurfaceTertiary": "#1F2A26",
+    "surfaceInverse": "#1F2A26",
+    "onSurfaceInverse": "#F8F6F1",
+    "brand": "#3E6B62",
+    "brandPrimary": "#3E6B62",
+    "onBrandPrimary": "#FFFFFF",
+    "brandSecondary": "#E59B86",
+    "onBrandSecondary": "#1F2A26",
+    "brandTertiary": "#6E8FC4",
+    "onBrandTertiary": "#FFFFFF",
+    "customGroupClay": "#C08A61",
+    "success": "#3E6B62",
+    "onSuccess": "#FFFFFF",
+    "warning": "#C08A61",
+    "onWarning": "#FFFFFF",
+    "error": "#E59B86",
+    "onError": "#1F2A26",
+    "info": "#6E8FC4",
+    "onInfo": "#FFFFFF",
+    "border": "#EAE6DF",
+    "borderStrong": "#CFC9BD",
+    "divider": "#EAE6DF",
+    "dark": {
+      "surface": "#121614",
+      "onSurface": "#E8E6E1",
+      "surfaceSecondary": "#1A221F",
+      "onSurfaceSecondary": "#E8E6E1",
+      "surfaceTertiary": "#252F2B",
+      "onSurfaceTertiary": "#E8E6E1",
+      "surfaceInverse": "#E8E6E1",
+      "onSurfaceInverse": "#121614",
+      "brandPrimary": "#518A7F",
+      "onBrandPrimary": "#FFFFFF",
+      "brandSecondary": "#C57863",
+      "onBrandSecondary": "#121614",
+      "brandTertiary": "#5679A8",
+      "onBrandTertiary": "#FFFFFF",
+      "customGroupClay": "#A6724A",
+      "border": "#252F2B"
+    }
+  },
+  "typography": {
+    "displayFontFamily": "Plus Jakarta Sans",
+    "textFontFamily": "Plus Jakarta Sans",
+    "scale": {
+      "sm": 12,
+      "base": 14,
+      "lg": 16,
+      "xl": 20,
+      "2xl": 24,
+      "3xl": 32
+    }
+  },
+  "spacing": {
+    "rule": "Generous, breathable rhythm. Avoid cramped elements, leverage safe areas, and give chat bubbles ample margins.",
+    "xs": 4,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 24,
+    "2xl": 32,
+    "3xl": 48
+  },
+  "radius_tokens": {
+    "sm": 6,
+    "md": 12,
+    "lg": 20,
+    "pill": 999
+  },
+  "shadow_tier": "1",
+  "navigation": "bottom_tabs",
+  "icon_set": "Ionicons",
+  "glassmorphism": {
+    "enabled": true,
+    "do's": [
+      "Use subtle glass over the ivory background for the bottom tab bar and sticky chat headers.",
+      "Use blur on the Voice Call screen over the warm abstract background."
+    ],
+    "dont's": [
+      "Never blur chat bubbles or care tracker cards.",
+      "Avoid over-layering glass; keep it restricted to structural navigation."
+    ]
+  },
+  "platform_libraries": {
+    "glass": {
+      "ios": "expo-glass-effect",
+      "android": "expo-blur",
+      "low_end_android_fallback": "solid surfaceSecondary"
+    },
+    "image": "expo-image",
+    "blur": "expo-blur",
+    "bottom_sheet": "@gorhom/bottom-sheet",
+    "animation": "react-native-reanimated",
+    "gesture": "react-native-gesture-handler"
+  },
+  "screens": [
+    {
+      "name": "Home",
+      "purpose": "A warm dashboard combining daily care tracking and quick access to family chats.",
+      "states": {
+        "loading": "Gentle fade-in skeleton on care cards.",
+        "empty": "Prompt to 'Say good morning to Mom or Dad'.",
+        "error": "Failed to load messages -> 'Take a deep breath and try again' with a retry button."
+      },
+      "layout": "Header: Large friendly greeting ('Good morning, Alex') with Profile avatar top-right. Section 1 (Care Tracker): Horizontal scroll or 3-column grid of white cards (Food, Water, Sleep) featuring circular progress rings and subtle icons. Section 2 (Recent Chats): Vertical list of Mom, Dad, and Family group, featuring custom abstract background avatars or initials, unread indicators, and a snippet of the last message."
+    },
+    {
+      "name": "Chats List",
+      "purpose": "Dedicated inbox for the family conversations.",
+      "states": {
+        "loading": "List skeleton.",
+        "empty": "No messages yet.",
+        "error": "Error loading chats."
+      },
+      "layout": "Standard iOS list layout on ivory background. Large (56x56) avatars for Mom (Coral tint), Dad (Blue tint), Group (Clay tint). Right-aligned subtle timestamps."
+    },
+    {
+      "name": "Chat (Direct & Group)",
+      "purpose": "The core iMessage-inspired conversation view with clear, color-coded bubbles.",
+      "states": {
+        "loading": "Spinner in header.",
+        "empty": "Start the conversation with a suggested quick-reply chip.",
+        "error": "Failed to send message -> inline red retry icon."
+      },
+      "layout": "Glass header with back button, Avatar, Name, and Phone/Call icon. Scrollable chat area: User bubbles right-aligned (Sage `#3E6B62`), Parent bubbles left-aligned. Mom uses Soft Coral (`#E59B86`), Dad uses Soft Blue (`#6E8FC4`). In Group chat, avatars appear next to left-aligned bubbles. Bubbles have `20px` border-radius with asymmetric bottom tails. Bottom input: text field with '+' for quick actions, microphone icon for voice, and 'Send'. Include an animated 3-dot typing indicator bubble."
+    },
+    {
+      "name": "Voice Call",
+      "purpose": "A warm, intimate, full-screen audio interface to talk to the AI parents.",
+      "states": {
+        "loading": "'Connecting to Mom...'",
+        "empty": "N/A",
+        "error": "'Call dropped. Reconnect?'"
+      },
+      "layout": "Full-bleed abstract watercolor background (Coral for Mom, Blue for Dad) with dark gradient scrim. Top: 'Calling Mom' text. Center: Animated waveform using Reanimated, responding to voice volume. Bottom: Live conversation transcript rolling upwards. Controls at bottom: Large glass or solid pill buttons for Mute, Speaker, and a red End Call button."
+    },
+    {
+      "name": "Profile",
+      "purpose": "Settings and AI transparent disclaimer.",
+      "states": {
+        "loading": "N/A",
+        "empty": "N/A",
+        "error": "N/A"
+      },
+      "layout": "Settings list pattern. Top section includes an ivory-tinted card explaining 'Mom and Dad are AI companions here to support you.' Toggle for Haptics, Account settings, Data export."
+    }
+  ],
+  "haptics": {
+    "chat_send": "impactLight",
+    "care_tracker_complete": "notificationSuccess",
+    "voice_call_connect": "impactMedium",
+    "typing_start": "selection"
+  },
+  "images": {
+    "mom_avatar_bg": {
+      "url": "https://images.unsplash.com/photo-1654331046252-c1a938237ca4?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1Mjh8MHwxfHNlYXJjaHwxfHxzb2Z0JTIwd2FybSUyMGNvcmFsJTIwd2F0ZXJjb2xvciUyMHRleHR1cmV8ZW58MHx8fHwxNzg4MDcxNjczfDA&ixlib=rb-4.1.0&q=85",
+      "alt": "Soft warm coral watercolor texture"
+    },
+    "dad_avatar_bg": {
+      "url": "https://images.unsplash.com/photo-1628882836842-d5ffd7c7278e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1ODR8MHwxfHNlYXJjaHwxfHxjYWxtJTIwc29mdCUyMGJsdWUlMjB3YXRlcmNvbG9yJTIwdGV4dHVyZXxlbnwwfHx8fDE3ODgwNzE2NzN8MA&ixlib=rb-4.1.0&q=85",
+      "alt": "Calm soft blue watercolor texture"
+    },
+    "home_hero_bg": {
+      "url": "https://images.unsplash.com/photo-1705837861201-dd000d929a31?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MDV8MHwxfHNlYXJjaHwxfHx3YXJtJTIwc2FnZSUyMGdyZWVuJTIwbmF0dXJhbCUyMHRleHR1cmV8ZW58MHx8fHwxNzg4MDcxNjczfDA&ixlib=rb-4.1.0&q=85",
+      "alt": "Warm sage green natural texture"
+    }
+  },
+  "instructions_to_main_agent": [
+    "Strictly follow the user's color palette: Ivory (#F8F6F1) for screen backgrounds, White (#FFFFFF) for cards/surfaces, Dark Green (#1F2A26) for primary text. Sage (#3E6B62) is the main brand action color.",
+    "For Chat Bubbles: Implement an iMessage structural layout (bubbles with 20px radii, asymmetrical bottom corner tails). Use Sage for outgoing, Soft Coral (#E59B86) for Mom's incoming, Soft Blue (#6E8FC4) for Dad's incoming, and Warm Clay (#C08A61) for system/group info.",
+    "In the Group chat, both Mom and Dad will reply. Ensure their bubbles are color-coded appropriately (Coral vs Blue) with their name or small avatar next to the bubble to distinguish them.",
+    "Use 'Plus Jakarta Sans' for all text to provide a friendly, modern, and clean aesthetic, mimicking WhatsApp's cleanliness but feeling warmer.",
+    "For the Voice Call screen, implement a React Native Reanimated waveform that feels alive. Use the abstract watercolor images fetched as full-bleed backgrounds with a dark gradient scrim from the bottom to ensure the white transcript text is highly readable.",
+    "For the Care Tracker on the Home screen, use a horizontal scroll view or clean grid of 3 white cards on the ivory background. Implement circular progress indicators for Food, Water, and Sleep.",
+    "Do not use generic blue/purple UI themes. Keep the aesthetic completely rooted in the organic Sage/Coral/Blue/Ivory palette.",
+    "Ensure haptics are fired when logging care items and sending messages."
+  ]
+}
