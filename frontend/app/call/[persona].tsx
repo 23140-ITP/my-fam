@@ -24,6 +24,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { Waveform } from "@/src/components/Waveform";
+import { GlassSurface } from "@/src/components/GlassSurface";
 import { PERSONAS, PersonaKey, colors, font, radius, spacing } from "@/src/constants/theme";
 import { api } from "@/src/lib/api";
 import { useRecorder } from "@/src/hooks/useRecorder";
@@ -285,7 +286,12 @@ export default function CallScreen() {
         </View>
 
         {/* Transcript */}
-        <View style={styles.transcriptBox}>
+        <GlassSurface
+          style={styles.transcriptBox}
+          contentStyle={styles.transcriptContent}
+          tintColor="rgba(255,255,255,0.14)"
+          intensity={32}
+        >
           <ScrollView
             ref={scrollRef}
             showsVerticalScrollIndicator={false}
@@ -302,7 +308,7 @@ export default function CallScreen() {
               </Animated.View>
             ))}
           </ScrollView>
-        </View>
+        </GlassSurface>
 
         {permBlocked ? (
           <Pressable style={styles.permPill} onPress={() => Linking.openSettings()} testID="call-open-settings">
@@ -313,9 +319,21 @@ export default function CallScreen() {
 
         {/* Controls */}
         <View style={styles.controls}>
-          <Pressable testID="call-mute" onPress={toggleMute} style={styles.smallBtn}>
-            <Ionicons name={muted ? "volume-mute" : "volume-high"} size={24} color="#fff" />
-            <Text style={styles.smallLabel}>{muted ? "Muted" : "Sound"}</Text>
+          <Pressable
+            testID="call-mute"
+            onPress={toggleMute}
+            style={({ pressed }) => [styles.smallBtn, pressed && styles.controlPressed]}
+          >
+            <GlassSurface
+              style={styles.controlGlass}
+              contentStyle={styles.controlContent}
+              tintColor="rgba(255,255,255,0.18)"
+              intensity={30}
+              interactive
+            >
+              <Ionicons name={muted ? "volume-mute" : "volume-high"} size={24} color="#fff" />
+              <Text style={styles.smallLabel}>{muted ? "Muted" : "Sound"}</Text>
+            </GlassSurface>
           </Pressable>
 
           <Pressable
@@ -329,18 +347,34 @@ export default function CallScreen() {
                 styles.primaryBusy,
             ]}
           >
-            {status === "thinking" || status === "connecting" ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Ionicons
-                name={status === "listening" ? "radio-button-on" : status === "speaking" ? "musical-notes" : "mic"}
-                size={30}
-                color="#fff"
-              />
-            )}
+            <GlassSurface
+              style={styles.primaryGlass}
+              contentStyle={styles.primaryContent}
+              tintColor={
+                status === "listening"
+                  ? "rgba(198,94,82,0.70)"
+                  : "rgba(62,107,98,0.72)"
+              }
+              intensity={34}
+              interactive
+            >
+              {status === "thinking" || status === "connecting" ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Ionicons
+                  name={status === "listening" ? "radio-button-on" : status === "speaking" ? "musical-notes" : "mic"}
+                  size={30}
+                  color="#fff"
+                />
+              )}
+            </GlassSurface>
           </Pressable>
 
-          <Pressable testID="call-end" onPress={endCall} style={[styles.smallBtn, styles.endBtn]}>
+          <Pressable
+            testID="call-end"
+            onPress={endCall}
+            style={({ pressed }) => [styles.smallBtn, styles.endBtn, pressed && styles.controlPressed]}
+          >
             <Ionicons name="call" size={24} color="#fff" style={{ transform: [{ rotate: "135deg" }] }} />
             <Text style={styles.smallLabel}>End</Text>
           </Pressable>
@@ -383,7 +417,15 @@ const styles = StyleSheet.create({
   groupInitial: { fontFamily: font.extrabold, fontSize: 44, color: "#fff" },
   statusText: { fontFamily: font.semibold, fontSize: 18, color: "#fff", marginTop: spacing.lg },
   waveWrap: { marginTop: spacing.md, height: 64, justifyContent: "center" },
-  transcriptBox: { flex: 1, marginTop: spacing.md, marginBottom: spacing.md },
+  transcriptBox: {
+    flex: 1,
+    marginTop: spacing.md,
+    marginBottom: spacing.md,
+    borderRadius: radius.xl,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "rgba(255,255,255,0.24)",
+  },
+  transcriptContent: { flex: 1, paddingHorizontal: spacing.md },
   turn: { marginBottom: spacing.md, maxWidth: "88%" },
   turnUser: { alignSelf: "flex-end", alignItems: "flex-end" },
   turnParent: { alignSelf: "flex-start" },
@@ -406,7 +448,17 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: "rgba(255,255,255,0.16)",
+    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  controlPressed: { transform: [{ scale: 0.94 }] },
+  controlGlass: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 32,
+  },
+  controlContent: {
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
     gap: 2,
@@ -417,12 +469,21 @@ const styles = StyleSheet.create({
     width: 84,
     height: 84,
     borderRadius: 42,
-    backgroundColor: colors.brand,
+    overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 4,
-    borderColor: "rgba(255,255,255,0.22)",
+    borderColor: "rgba(255,255,255,0.28)",
   },
-  primaryListening: { backgroundColor: colors.danger },
-  primaryBusy: { opacity: 0.75 },
+  primaryGlass: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 42,
+  },
+  primaryContent: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  primaryListening: { borderColor: "rgba(255,255,255,0.42)" },
+  primaryBusy: { transform: [{ scale: 0.98 }] },
 });
