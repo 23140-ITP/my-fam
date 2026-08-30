@@ -27,6 +27,7 @@ import {
 import { api, Care, Checkin, Conversation } from "@/src/lib/api";
 import { useFamily } from "@/src/store/family";
 import { CheckInCard } from "@/src/components/CheckInCard";
+import { GlassSurface } from "@/src/components/GlassSurface";
 import { haptic } from "@/src/lib/haptics";
 
 export default function HomeScreen() {
@@ -113,18 +114,34 @@ export default function HomeScreen() {
             <Pressable
               testID="home-notes-btn"
               onPress={() => router.push("/notes")}
-              style={styles.profileBtn}
+              style={({ pressed }) => [styles.profileBtn, pressed && styles.profileBtnPressed]}
               hitSlop={8}
             >
-              <Ionicons name="bookmark-outline" size={20} color={colors.brand} />
+              <GlassSurface
+                style={styles.profileGlass}
+                contentStyle={styles.profileGlassContent}
+                tintColor={colors.glassStrong}
+                intensity={58}
+                interactive
+              >
+                <Ionicons name="bookmark-outline" size={20} color={colors.brand} />
+              </GlassSurface>
             </Pressable>
             <Pressable
               testID="home-profile-btn"
               onPress={() => router.push("/profile")}
-              style={styles.profileBtn}
+              style={({ pressed }) => [styles.profileBtn, pressed && styles.profileBtnPressed]}
               hitSlop={8}
             >
-              <Ionicons name="person" size={20} color={colors.brand} />
+              <GlassSurface
+                style={styles.profileGlass}
+                contentStyle={styles.profileGlassContent}
+                tintColor={colors.glassStrong}
+                intensity={58}
+                interactive
+              >
+                <Ionicons name="person" size={20} color={colors.brand} />
+              </GlassSurface>
             </Pressable>
           </View>
         </View>
@@ -300,7 +317,15 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: colors.brandSoft,
+    overflow: "hidden",
+  },
+  profileBtnPressed: { transform: [{ scale: 0.95 }] },
+  profileGlass: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 22,
+  },
+  profileGlassContent: {
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
   },

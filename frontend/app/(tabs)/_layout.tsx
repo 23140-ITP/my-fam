@@ -1,8 +1,9 @@
 import React from "react";
-import { Platform } from "react-native";
+import { Platform, StyleSheet } from "react-native";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
+import { GlassSurface } from "@/src/components/GlassSurface";
 import { colors, font } from "@/src/constants/theme";
 
 const isIOS26 =
@@ -44,11 +45,24 @@ export default function TabsLayout() {
         tabBarActiveTintColor: colors.brand,
         tabBarInactiveTintColor: colors.textFaint,
         tabBarStyle: {
-          backgroundColor: colors.card,
-          borderTopColor: colors.border,
-          ...(Platform.OS === "web" ? { height: 64 } : {}),
+          backgroundColor: "transparent",
+          borderTopWidth: 0,
+          height: 78,
+          paddingTop: 6,
+          paddingBottom: Platform.OS === "ios" ? 8 : 6,
         },
-        tabBarItemStyle: { alignSelf: "center" },
+        tabBarBackground: () => (
+          <GlassSurface
+            style={styles.tabBarGlass}
+            contentStyle={styles.tabBarGlassContent}
+            tintColor={colors.glass}
+            intensity={65}
+            interactive
+          >
+            <></>
+          </GlassSurface>
+        ),
+        tabBarItemStyle: { alignSelf: "center", paddingTop: 1 },
         tabBarLabelStyle: { fontFamily: font.semibold, fontSize: 11 },
       }}
     >
@@ -66,7 +80,11 @@ export default function TabsLayout() {
         options={{
           title: "Chats",
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? "chatbubbles" : "chatbubbles-outline"} size={size} color={color} />
+            <Ionicons
+              name={focused ? "chatbubbles" : "chatbubbles-outline"}
+              size={size}
+              color={color}
+            />
           ),
         }}
       />
@@ -91,3 +109,18 @@ export default function TabsLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  tabBarGlass: {
+    flex: 1,
+    marginHorizontal: 10,
+    marginTop: 6,
+    marginBottom: 6,
+    borderRadius: 28,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.glassBorder,
+  },
+  tabBarGlassContent: {
+    flex: 1,
+  },
+});

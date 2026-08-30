@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 
 import { colors, font, radius, shadow, spacing } from "@/src/constants/theme";
+import { GlassSurface } from "@/src/components/GlassSurface";
 
 const EMOJIS = ["❤️", "😂", "🥹", "👍", "😮", "😢"];
 const BAR_HEIGHT = 60;
@@ -35,7 +36,14 @@ export function ReactionPicker({
   return (
     <Pressable style={styles.backdrop} onPress={onClose} testID="reaction-backdrop">
       <View style={[styles.wrapper, { top }]} pointerEvents="box-none">
-        <Animated.View entering={ZoomIn.springify().damping(14)} style={[styles.bar, shadow]}>
+        <Animated.View entering={ZoomIn.springify().damping(14)} style={styles.barShell}>
+          <GlassSurface
+            style={[styles.bar, shadow]}
+            contentStyle={styles.barContent}
+            tintColor={colors.glassStrong}
+            intensity={70}
+            interactive
+          >
           {EMOJIS.map((e) => (
             <Pressable
               key={e}
@@ -55,6 +63,7 @@ export function ReactionPicker({
               color={saved ? colors.brand : colors.textMuted}
             />
           </Pressable>
+          </GlassSurface>
         </Animated.View>
       </View>
     </Pressable>
@@ -64,14 +73,16 @@ export function ReactionPicker({
 const styles = StyleSheet.create({
   backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(31,42,38,0.12)", zIndex: 50 },
   wrapper: { position: "absolute", left: 0, right: 0, alignItems: "center" },
+  barShell: { borderRadius: radius.pill },
   bar: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-    backgroundColor: colors.card,
     borderRadius: radius.pill,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
+  },
+  barContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
   },
   emojiBtn: { width: 40, height: 44, alignItems: "center", justifyContent: "center", borderRadius: radius.pill },
   emojiActive: { backgroundColor: colors.brandSoft },

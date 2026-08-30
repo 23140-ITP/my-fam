@@ -19,6 +19,7 @@ import { Avatar } from "@/src/components/Avatar";
 import { ChatBubble } from "@/src/components/ChatBubble";
 import { TypingIndicator } from "@/src/components/TypingIndicator";
 import { QuickReplies } from "@/src/components/QuickReplies";
+import { GlassSurface } from "@/src/components/GlassSurface";
 import { ReactionPicker } from "@/src/components/ReactionPicker";
 import {
   PERSONAS,
@@ -251,7 +252,13 @@ export default function ChatScreen() {
   return (
     <View style={styles.root}>
       {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top + 6 }]}>
+      <GlassSurface
+        style={styles.headerShell}
+        contentStyle={[styles.header, { paddingTop: insets.top + 6 }]}
+        tintColor={colors.glass}
+        intensity={62}
+        interactive
+      >
         <Pressable testID="chat-back" onPress={() => router.back()} hitSlop={10} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={26} color={colors.brand} />
         </Pressable>
@@ -283,7 +290,7 @@ export default function ChatScreen() {
             <Ionicons name="call" size={20} color={colors.clay} />
           </Pressable>
         )}
-      </View>
+      </GlassSurface>
 
       <KeyboardAvoidingView style={styles.flex} behavior="translate-with-padding" keyboardVerticalOffset={0}>
         <FlatList
@@ -342,7 +349,13 @@ export default function ChatScreen() {
           </View>
         ) : null}
 
-        <View style={[styles.inputBar, { paddingBottom: (insets.bottom || spacing.sm) + spacing.sm }]}>
+        <GlassSurface
+          style={styles.inputShell}
+          contentStyle={[styles.inputBar, { paddingBottom: (insets.bottom || spacing.sm) + spacing.sm }]}
+          tintColor={colors.glassStrong}
+          intensity={68}
+          interactive
+        >
           <Pressable
             testID="chat-quick-toggle"
             onPress={() => setShowQuick((s) => !s)}
@@ -378,7 +391,7 @@ export default function ChatScreen() {
               )}
             </Pressable>
           )}
-        </View>
+        </GlassSurface>
       </KeyboardAvoidingView>
 
       {toast ? (
@@ -412,15 +425,16 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.surface },
   flex: { flex: 1 },
+  headerShell: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.glassBorder,
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
     paddingHorizontal: spacing.md,
     paddingBottom: spacing.md,
-    backgroundColor: "rgba(255,249,243,0.96)",
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
   },
   backBtn: { padding: 2 },
   headerText: { flex: 1, marginLeft: 2 },
@@ -458,15 +472,16 @@ const styles = StyleSheet.create({
   },
   recDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: colors.danger },
   recText: { fontFamily: font.medium, fontSize: 12.5, color: colors.textMuted },
+  inputShell: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.glassBorder,
+  },
   inputBar: {
     flexDirection: "row",
     alignItems: "flex-end",
     gap: spacing.sm,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.sm,
-    backgroundColor: colors.card,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.border,
   },
   plusBtn: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center", marginBottom: 2 },
   input: {

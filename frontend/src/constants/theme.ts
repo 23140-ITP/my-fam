@@ -20,6 +20,9 @@ export const colors = {
   claySoft: "#F6EBDC",
   border: "#E9E0D5",
   borderStrong: "#D1C5B6",
+  glass: "rgba(255,255,255,0.30)",
+  glassStrong: "rgba(255,255,255,0.44)",
+  glassBorder: "rgba(255,255,255,0.72)",
   white: "#FFFFFF",
   danger: "#C65E52",
 };
