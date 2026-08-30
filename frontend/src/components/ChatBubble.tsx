@@ -84,7 +84,7 @@ export function ChatBubble({
             onLongPress={handleLongPress}
             delayLongPress={260}
             testID={`bubble-press-${message.id}`}
-            style={[styles.bubble, styles.parentBubble, { backgroundColor: p.color }]}
+            style={[styles.bubble, styles.parentBubble, { backgroundColor: p.soft }]}
           >
             <Text style={[styles.text, { color: p.bubbleText }]}>{message.text}</Text>
           </Pressable>
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   reactionEmoji: { fontSize: 12 },
   bubble: { maxWidth: "100%", paddingVertical: 10, paddingHorizontal: 14, borderRadius: radius.lg },
   userBubble: { backgroundColor: colors.brand, borderBottomRightRadius: radius.sm },
-  parentBubble: { borderBottomLeftRadius: radius.sm },
+  parentBubble: { borderBottomLeftRadius: radius.sm, borderWidth: 1, borderColor: colors.border },
   text: { fontFamily: font.regular, fontSize: 15.5, lineHeight: 21 },
   userText: { color: "#FFFFFF" },
   name: { fontFamily: font.semibold, fontSize: 12, marginBottom: 3, marginLeft: 4 },
