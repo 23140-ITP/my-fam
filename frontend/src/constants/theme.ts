@@ -1,32 +1,32 @@
 import { Platform } from "react-native";
 
 export const colors = {
-  surface: "#F8F6F1",
+  surface: "#FFF9F3",
   card: "#FFFFFF",
-  tertiary: "#EAE6DF",
-  text: "#1F2A26",
-  textMuted: "#6B756F",
-  textFaint: "#9AA39F",
+  tertiary: "#EDE5DB",
+  text: "#24302A",
+  textMuted: "#7C847E",
+  textFaint: "#A39D95",
   brand: "#3E6B62",
-  brandDark: "#2F534C",
-  brandSoft: "#E7EEEB",
-  mom: "#E59B86",
-  momDeep: "#CE7C64",
-  momSoft: "#FBEDE7",
-  dad: "#6E8FC4",
-  dadDeep: "#54739F",
-  dadSoft: "#E8EEF7",
-  clay: "#C08A61",
-  claySoft: "#F4E9DF",
-  border: "#EAE6DF",
-  borderStrong: "#CFC9BD",
+  brandDark: "#2D544B",
+  brandSoft: "#E8F0EC",
+  mom: "#E88978",
+  momDeep: "#B96452",
+  momSoft: "#FCEBE6",
+  dad: "#6E94A7",
+  dadDeep: "#416A7C",
+  dadSoft: "#E7F0F4",
+  clay: "#C7944D",
+  claySoft: "#F6EBDC",
+  border: "#E9E0D5",
+  borderStrong: "#D1C5B6",
   white: "#FFFFFF",
-  danger: "#D96A5B",
+  danger: "#C65E52",
 };
 
 export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32, xxxl: 48 };
 
-export const radius = { sm: 6, md: 12, lg: 20, xl: 28, pill: 999 };
+export const radius = { sm: 6, md: 12, lg: 16, xl: 20, pill: 999 };
 
 export const font = {
   regular: "Jakarta",
@@ -39,19 +39,19 @@ export const font = {
 export const shadow = Platform.select({
   ios: {
     shadowColor: "#1F2A26",
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.04,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
   },
-  android: { elevation: 3 },
+  android: { elevation: 1 },
   default: {},
 }) as object;
 
 export const softShadow = Platform.select({
   ios: {
     shadowColor: "#1F2A26",
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
   },
   android: { elevation: 1 },
@@ -78,7 +78,7 @@ export const PERSONAS: Record<PersonaKey, {
     color: colors.mom,
     deep: colors.momDeep,
     soft: colors.momSoft,
-    bubbleText: "#3A241C",
+    bubbleText: "#6A3F35",
     initial: "M",
     subtitle: "Always here for you",
     bg: "https://images.unsplash.com/photo-1654331046252-c1a938237ca4?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1Mjh8MHwxfHNlYXJjaHwxfHxzb2Z0JTIwd2FybSUyMGNvcmFsJTIwd2F0ZXJjb2xvciUyMHRleHR1cmV8ZW58MHx8fHwxNzg4MDcxNjczfDA&ixlib=rb-4.1.0&q=85",
@@ -90,7 +90,7 @@ export const PERSONAS: Record<PersonaKey, {
     color: colors.dad,
     deep: colors.dadDeep,
     soft: colors.dadSoft,
-    bubbleText: "#FFFFFF",
+    bubbleText: "#2D4D5B",
     initial: "D",
     subtitle: "You've got this, kiddo",
     bg: "https://images.unsplash.com/photo-1628882836842-d5ffd7c7278e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1ODR8MHwxfHNlYXJjaHwxfHxjYWxtJTIwc29mdCUyMGJsdWUlMjB3YXRlcmNvbG9yJTIwdGV4dHVyZXxlbnwwfHx8fDE3ODgwNzE2NzN8MA&ixlib=rb-4.1.0&q=85",
@@ -100,7 +100,7 @@ export const PERSONAS: Record<PersonaKey, {
     key: "family",
     name: "Family",
     color: colors.clay,
-    deep: "#A6724A",
+    deep: "#8B6131",
     soft: colors.claySoft,
     bubbleText: "#FFFFFF",
     initial: "F",

@@ -75,7 +75,7 @@ export default function NotesScreen() {
             <Animated.View
               key={note.id}
               entering={FadeInDown.duration(300).delay(i * 50)}
-              style={[styles.noteCard, { borderLeftColor: p.color }]}
+              style={styles.noteCard}
               testID={`note-${note.id}`}
             >
               <View style={styles.quoteRow}>
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: spacing.md,
     paddingBottom: spacing.md,
-    backgroundColor: "rgba(248,246,241,0.96)",
+    backgroundColor: "rgba(255,249,243,0.96)",
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border,
   },
@@ -125,7 +125,8 @@ const styles = StyleSheet.create({
   noteCard: {
     backgroundColor: colors.card,
     borderRadius: radius.lg,
-    borderLeftWidth: 4,
+    borderWidth: 1,
+    borderColor: colors.border,
     padding: spacing.lg,
     marginBottom: spacing.md,
   },
