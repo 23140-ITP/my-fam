@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { GlassSurface } from "@/src/components/GlassSurface";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
 import { PERSONAS, colors, font, formatTime, radius, spacing } from "@/src/constants/theme";
@@ -45,13 +46,19 @@ export default function NotesScreen() {
 
   return (
     <View style={styles.root}>
-      <View style={[styles.header, { paddingTop: insets.top + 6 }]}>
+      <GlassSurface
+        style={styles.headerShell}
+        contentStyle={[styles.header, { paddingTop: insets.top + 6 }]}
+        tintColor={colors.glass}
+        intensity={62}
+        interactive
+      >
         <Pressable testID="notes-back" onPress={() => router.back()} hitSlop={10} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={26} color={colors.brand} />
         </Pressable>
         <Text style={styles.headerTitle}>Notes from home</Text>
         <View style={{ width: 30 }} />
-      </View>
+      </GlassSurface>
 
       <ScrollView
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + spacing.xxl }]}
@@ -105,15 +112,16 @@ export default function NotesScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.surface },
+  headerShell: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.glassBorder,
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: spacing.md,
     paddingBottom: spacing.md,
-    backgroundColor: "rgba(255,249,243,0.96)",
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
   },
   backBtn: { padding: 2, width: 30 },
   headerTitle: { fontFamily: font.bold, fontSize: 17, color: colors.text },
