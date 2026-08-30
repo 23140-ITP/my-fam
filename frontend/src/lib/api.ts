@@ -107,6 +107,10 @@ export const api = {
     created_at?: string;
   }) => postJSON<Note>("/notes", note),
   deleteNote: (id: string) => del<{ ok: boolean }>(`/notes/${id}`),
+  reactions: (conversation: PersonaKey) =>
+    getJSON<{ reactions: { message_id: string; emoji: string }[] }>(`/reactions?conversation=${conversation}`),
+  toggleReaction: (r: { conversation: PersonaKey; message_id: string; emoji: string }) =>
+    postJSON<{ message_id: string; reacted: boolean; emoji: string }>("/reactions/toggle", r),
   ttsUrl: (persona: PersonaKey, text: string, voice?: string) =>
     `${API_BASE}/tts?persona=${persona}&text=${encodeURIComponent(text.slice(0, 900))}${
       voice ? `&voice=${voice}` : ""

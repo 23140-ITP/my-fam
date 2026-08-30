@@ -54,13 +54,18 @@ export default function ChatScreen() {
   const { nameFor, initialFor } = useFamily();
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [noteMap, setNoteMap] = useState<Record<string, string>>({});
+  const [reactions, setReactions] = useState<Record<string, string>>({});
   const [toast, setToast] = useState<string | null>(null);
   const displayName = isGroup ? "Family group" : nameFor(persona);
 
   useEffect(() => {
     (async () => {
       try {
-        const [data, n] = await Promise.all([api.messages(persona), api.notes()]);
+        const [data, n, rx] = await Promise.all([
+          api.messages(persona),
+          api.notes(),
+          api.reactions(persona),
+        ]);
         setMessages(data.messages);
         const ids = new Set<string>();
         const map: Record<string, string> = {};
@@ -70,6 +75,11 @@ export default function ChatScreen() {
         });
         setSavedIds(ids);
         setNoteMap(map);
+        const rmap: Record<string, string> = {};
+        rx.reactions.forEach((x) => {
+          rmap[x.message_id] = x.emoji;
+        });
+        setReactions(rmap);
       } catch {
         /* keep */
       } finally {
@@ -175,6 +185,27 @@ export default function ChatScreen() {
     [savedIds, noteMap, persona, flashToast],
   );
 
+  const toggleReact = useCallback(
+    async (message: Message) => {
+      if (message.sender === "user") return;
+      haptic.light();
+      const had = !!reactions[message.id];
+      setReactions((r) => {
+        const n = { ...r };
+        if (had) delete n[message.id];
+        else n[message.id] = "❤️";
+        return n;
+      });
+      if (!had) flashToast(`${nameFor(message.sender as "mom" | "dad")} felt your love 💛`);
+      try {
+        await api.toggleReaction({ conversation: persona, message_id: message.id, emoji: "❤️" });
+      } catch {
+        /* ignore */
+      }
+    },
+    [reactions, persona, flashToast, nameFor],
+  );
+
   const renderItem = useCallback(
     ({ item, index }: { item: Message; index: number }) => {
       const prev = messages[index - 1];
@@ -190,10 +221,12 @@ export default function ChatScreen() {
           initial={parent ? initialFor(parent) : undefined}
           saved={savedIds.has(item.id)}
           onSave={parent ? () => toggleSave(item) : undefined}
+          reaction={reactions[item.id]}
+          onReact={parent ? () => toggleReact(item) : undefined}
         />
       );
     },
-    [messages, isGroup, nameFor, initialFor, savedIds, toggleSave],
+    [messages, isGroup, nameFor, initialFor, savedIds, toggleSave, reactions, toggleReact],
   );
 
   const subtitle = typing

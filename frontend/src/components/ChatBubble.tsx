@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useRef } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import Animated, { FadeInDown } from "react-native-reanimated";
+import Animated, { FadeInDown, ZoomIn } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 
 import { Avatar } from "@/src/components/Avatar";
@@ -16,6 +16,8 @@ export function ChatBubble({
   initial,
   saved = false,
   onSave,
+  reaction,
+  onReact,
 }: {
   message: Message;
   group?: boolean;
@@ -25,7 +27,10 @@ export function ChatBubble({
   initial?: string;
   saved?: boolean;
   onSave?: () => void;
+  reaction?: string;
+  onReact?: () => void;
 }) {
+  const lastTap = useRef(0);
   const isUser = message.sender === "user";
 
   if (isUser) {
@@ -45,6 +50,15 @@ export function ChatBubble({
 
   const persona = message.sender as "mom" | "dad";
   const p = PERSONAS[persona];
+  const handlePress = () => {
+    const now = Date.now();
+    if (now - lastTap.current < 300) {
+      lastTap.current = 0;
+      onReact?.();
+    } else {
+      lastTap.current = now;
+    }
+  };
   return (
     <Animated.View
       entering={FadeInDown.duration(220).delay(Math.min(index, 6) * 18)}
@@ -58,14 +72,27 @@ export function ChatBubble({
       ) : null}
       <View style={styles.leftContent}>
         {group && showMeta ? <Text style={[styles.name, { color: p.deep }]}>{name || p.name}</Text> : null}
-        <Pressable
-          onLongPress={onSave}
-          delayLongPress={280}
-          testID={`bubble-save-${message.id}`}
-          style={[styles.bubble, styles.parentBubble, { backgroundColor: p.color }]}
-        >
-          <Text style={[styles.text, { color: p.bubbleText }]}>{message.text}</Text>
-        </Pressable>
+        <View style={styles.bubbleWrap}>
+          <Pressable
+            onPress={handlePress}
+            onLongPress={onSave}
+            delayLongPress={280}
+            testID={`bubble-save-${message.id}`}
+            style={[styles.bubble, styles.parentBubble, { backgroundColor: p.color }]}
+          >
+            <Text style={[styles.text, { color: p.bubbleText }]}>{message.text}</Text>
+          </Pressable>
+          {reaction ? (
+            <Animated.View
+              key={reaction}
+              entering={ZoomIn.springify().damping(11)}
+              style={styles.reactionBadge}
+              testID={`bubble-reaction-${message.id}`}
+            >
+              <Text style={styles.reactionEmoji}>{reaction}</Text>
+            </Animated.View>
+          ) : null}
+        </View>
         <View style={styles.metaRow}>
           <Text style={styles.time}>{formatTime(message.created_at)}</Text>
           {saved ? <Ionicons name="bookmark" size={11} color={p.deep} style={styles.savedIcon} /> : null}
@@ -80,6 +107,19 @@ const styles = StyleSheet.create({
   rowLeft: { flexDirection: "row", alignItems: "flex-end", marginBottom: spacing.md, paddingRight: spacing.xxxl },
   avatarSlot: { width: 30, marginRight: spacing.sm, marginBottom: 20 },
   leftContent: { flexShrink: 1, alignItems: "flex-start" },
+  bubbleWrap: { position: "relative", alignSelf: "flex-start" },
+  reactionBadge: {
+    position: "absolute",
+    bottom: -10,
+    right: -8,
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  reactionEmoji: { fontSize: 12 },
   bubble: { maxWidth: "100%", paddingVertical: 10, paddingHorizontal: 14, borderRadius: radius.lg },
   userBubble: { backgroundColor: colors.brand, borderBottomRightRadius: radius.sm },
   parentBubble: { borderBottomLeftRadius: radius.sm },

@@ -59,6 +59,12 @@ coral #E59B86 Mom, blue #6E8FC4 Dad, clay #C08A61 group. See `/app/design_guidel
   follow whoever is speaking. Backend `/api/chat` already returns both replies; each is synthesized
   with that parent's chosen TTS voice via `/api/tts`.
 
+## Implemented — Iteration 4 (2026-06)
+- **Group Reactions**: double-tap any Mom or Dad message (in direct or group chats) to toggle a ❤️
+  reaction shown as a small badge on the bubble, with a warm toast ("… felt your love 💛") and
+  haptic. Persisted per message via `/api/reactions/toggle` + `GET /api/reactions`; long-press still
+  saves to Notes (two distinct gestures on the same bubble).
+
 ## User Personas
 - Young adult / student living away from home who misses parental check-ins and encouragement.
 - Anyone wanting a warm daily wellbeing nudge (food/water/sleep) with an emotional companion.

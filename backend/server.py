@@ -620,6 +620,44 @@ async def delete_note(note_id: str, user_id: str = DEMO_USER):
     return {"ok": True}
 
 
+class ReactionIn(BaseModel):
+    conversation: str
+    message_id: str
+    emoji: str = "\u2764\ufe0f"
+    user_id: str = DEMO_USER
+
+
+@api_router.get("/reactions")
+async def get_reactions(conversation: str, user_id: str = DEMO_USER):
+    docs = await db.reactions.find(
+        {"user_id": user_id, "conversation": conversation, "active": True}
+    ).to_list(500)
+    return {"reactions": [{"message_id": d["message_id"], "emoji": d.get("emoji", "\u2764\ufe0f")} for d in docs]}
+
+
+@api_router.post("/reactions/toggle")
+async def toggle_reaction(payload: ReactionIn):
+    doc = await db.reactions.find_one({"user_id": payload.user_id, "message_id": payload.message_id})
+    if doc:
+        new_active = not doc.get("active", True)
+        await db.reactions.update_one(
+            {"_id": doc["_id"]},
+            {"$set": {"active": new_active, "emoji": payload.emoji, "updated_at": now_iso()}},
+        )
+        return {"message_id": payload.message_id, "reacted": new_active, "emoji": payload.emoji}
+    await db.reactions.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": payload.user_id,
+        "conversation": payload.conversation,
+        "message_id": payload.message_id,
+        "emoji": payload.emoji,
+        "active": True,
+        "created_at": now_iso(),
+        "updated_at": now_iso(),
+    })
+    return {"message_id": payload.message_id, "reacted": True, "emoji": payload.emoji}
+
+
 # ---------------------------------------------------------------------------
 # Seed a warm, believable demo on first boot (idempotent)
 # ---------------------------------------------------------------------------
