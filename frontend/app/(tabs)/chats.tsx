@@ -58,7 +58,7 @@ export default function ChatsScreen() {
               <Animated.View key={key} entering={FadeInDown.duration(320).delay(i * 70)}>
                 <Pressable
                   testID={`chats-row-${key}`}
-                  style={styles.row}
+                  style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
                   onPress={() => router.push(`/chat/${key}`)}
                 >
                   <Avatar persona={key} size={56} initial={initialFor(key)} />
@@ -97,19 +97,20 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.surface },
   content: { paddingHorizontal: spacing.lg },
   title: { fontFamily: font.extrabold, fontSize: 30, color: colors.text, letterSpacing: -0.6 },
-  sub: { fontFamily: font.regular, fontSize: 14.5, color: colors.textMuted, marginTop: 4, marginBottom: spacing.xl },
-  list: { gap: spacing.md },
+  sub: { fontFamily: font.regular, fontSize: 15.5, color: colors.textMuted, marginTop: 4, marginBottom: spacing.xl },
+  list: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
   row: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
-    padding: spacing.md,
+    paddingVertical: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
   },
+  rowPressed: { opacity: 0.68 },
   mid: { flex: 1, marginLeft: spacing.md },
   name: { fontFamily: font.bold, fontSize: 16.5, color: colors.text },
-  snippet: { fontFamily: font.regular, fontSize: 14, color: colors.textMuted, marginTop: 3 },
+  snippet: { fontFamily: font.regular, fontSize: 14.5, color: colors.textMuted, marginTop: 3 },
   right: { alignItems: "flex-end", gap: 7 },
-  time: { fontFamily: font.regular, fontSize: 11.5, color: colors.textFaint },
+  time: { fontFamily: font.regular, fontSize: 12, color: colors.textFaint },
   dot: { width: 10, height: 10, borderRadius: 5 },
 });
