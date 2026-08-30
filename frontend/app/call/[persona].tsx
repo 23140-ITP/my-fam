@@ -42,44 +42,89 @@ function fmt(s: number) {
 
 export default function CallScreen() {
   const raw = useLocalSearchParams<{ persona: string }>().persona;
-  const persona: PersonaKey = raw === "dad" ? "dad" : "mom";
+  const isGroup = raw === "family";
+  const persona: PersonaKey = raw === "dad" ? "dad" : raw === "family" ? "family" : "mom";
   const p = PERSONAS[persona];
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const recorder = useRecorder();
   const tts = useTts();
   const { nameFor, initialFor } = useFamily();
-  const name = nameFor(persona);
+  const title = isGroup ? `${nameFor("mom")} & ${nameFor("dad")}` : nameFor(persona);
 
   const [status, setStatus] = useState<Status>("connecting");
   const [muted, setMuted] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const [turns, setTurns] = useState<Turn[]>([]);
   const [permBlocked, setPermBlocked] = useState(false);
+  const [speaking, setSpeaking] = useState<"mom" | "dad" | null>(null);
   const scrollRef = useRef<ScrollView>(null);
   const speakTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const queue = useRef<{ persona: "mom" | "dad"; text: string }[]>([]);
+  const idx = useRef(0);
+  const token = useRef(0);
+  const mutedRef = useRef(false);
 
-  const scheduleSpeakEnd = useCallback((text: string) => {
-    if (speakTimer.current) clearTimeout(speakTimer.current);
-    const est = Math.min(12000, Math.max(1800, text.length * 62));
-    speakTimer.current = setTimeout(() => {
-      setStatus((s) => (s === "speaking" ? "idle" : s));
-    }, est);
-  }, []);
+  // Play a queue of parent clips one after another (Mom, then Dad in a group call)
+  const playIndex = useCallback(
+    (i: number) => {
+      const q = queue.current;
+      if (speakTimer.current) clearTimeout(speakTimer.current);
+      if (i >= q.length) {
+        setStatus((s) => (s === "speaking" ? "idle" : s));
+        setSpeaking(null);
+        return;
+      }
+      idx.current = i;
+      const item = q[i];
+      const myToken = ++token.current;
+      setSpeaking(item.persona);
+      setStatus("speaking");
+      if (mutedRef.current) {
+        speakTimer.current = setTimeout(() => {
+          if (myToken === token.current) playIndex(i + 1);
+        }, 850);
+      } else {
+        tts.speak(item.persona, item.text);
+        const est = Math.min(14000, Math.max(2400, item.text.length * 70)) + 3500;
+        speakTimer.current = setTimeout(() => {
+          if (myToken === token.current) playIndex(i + 1);
+        }, est);
+      }
+    },
+    [tts],
+  );
+
+  const startSpeaking = useCallback(
+    (items: { persona: "mom" | "dad"; text: string }[]) => {
+      queue.current = items;
+      idx.current = 0;
+      playIndex(0);
+    },
+    [playIndex],
+  );
 
   // Connect, then greeting
   useEffect(() => {
     haptic.medium();
     const t = setTimeout(() => {
-      const greet = p.greeting;
-      setTurns([{ id: "greet", sender: persona, text: greet }]);
-      setStatus("speaking");
-      if (!muted) tts.speak(persona, greet);
-      scheduleSpeakEnd(greet);
+      if (isGroup) {
+        const items = [
+          { persona: "mom" as const, text: PERSONAS.mom.greeting },
+          { persona: "dad" as const, text: PERSONAS.dad.greeting },
+        ];
+        setTurns(items.map((it, i) => ({ id: `greet-${i}`, sender: it.persona, text: it.text })));
+        startSpeaking(items);
+      } else {
+        const only = persona as "mom" | "dad";
+        setTurns([{ id: "greet", sender: only, text: p.greeting }]);
+        startSpeaking([{ persona: only, text: p.greeting }]);
+      }
     }, 1300);
     return () => {
       clearTimeout(t);
       if (speakTimer.current) clearTimeout(speakTimer.current);
+      token.current++;
       tts.stop();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -93,10 +138,11 @@ export default function CallScreen() {
     return () => clearInterval(id);
   }, [connecting]);
 
-  // Stop speaking state when audio finishes
+  // Advance the speech queue when a clip finishes playing
   const finished = tts.status?.didJustFinish;
   useEffect(() => {
-    if (finished) setStatus((s) => (s === "speaking" ? "idle" : s));
+    if (finished && !mutedRef.current) playIndex(idx.current + 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [finished]);
 
   useEffect(() => {
@@ -121,35 +167,34 @@ export default function CallScreen() {
       setTurns((t) => [...t, { id: `u-${Date.now()}`, sender: "user", text }]);
       try {
         const { replies } = await api.chat(persona, text);
-        const reply = replies[0];
-        setTurns((t) => [...t, { id: reply.id, sender: persona, text: reply.text }]);
-        if (!muted) {
-          setStatus("speaking");
-          tts.speak(persona, reply.text);
-          scheduleSpeakEnd(reply.text);
-        } else {
-          setStatus("idle");
-        }
+        setTurns((t) => [...t, ...replies.map((r) => ({ id: r.id, sender: r.sender, text: r.text }))]);
+        const items = replies
+          .filter((r) => r.sender !== "user")
+          .map((r) => ({ persona: r.sender as "mom" | "dad", text: r.text }));
+        startSpeaking(items);
       } catch {
         setStatus("idle");
       }
     }
-  }, [status, recorder, persona, muted, tts, scheduleSpeakEnd]);
+  }, [status, recorder, persona, startSpeaking]);
 
   const toggleMute = useCallback(() => {
     haptic.select();
-    setMuted((m) => {
-      const next = !m;
-      if (next) {
-        tts.stop();
-        setStatus((s) => (s === "speaking" ? "idle" : s));
-      }
-      return next;
-    });
+    const next = !mutedRef.current;
+    mutedRef.current = next;
+    setMuted(next);
+    if (next) {
+      token.current++;
+      if (speakTimer.current) clearTimeout(speakTimer.current);
+      tts.stop();
+      setStatus((s) => (s === "speaking" ? "idle" : s));
+      setSpeaking(null);
+    }
   }, [tts]);
 
   const endCall = useCallback(() => {
     haptic.medium();
+    token.current++;
     tts.stop();
     router.back();
   }, [tts, router]);
@@ -172,6 +217,7 @@ export default function CallScreen() {
   }, [active, pulse]);
   const avatarStyle = useAnimatedStyle(() => ({ transform: [{ scale: pulse.value }] }));
 
+  const speakerName = speaking ? nameFor(speaking) : title;
   const statusText =
     status === "connecting"
       ? "Connecting…"
@@ -180,7 +226,7 @@ export default function CallScreen() {
         : status === "thinking"
           ? "Thinking…"
           : status === "speaking"
-            ? `${name} is talking…`
+            ? `${speakerName} is talking…`
             : "Tap to talk";
 
   return (
@@ -194,22 +240,47 @@ export default function CallScreen() {
       <View style={[styles.content, { paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom + spacing.lg }]}>
         {/* Top */}
         <View style={styles.top}>
-          <Text style={styles.calling}>Calling {name}</Text>
+          <Text style={styles.calling}>Calling {title}</Text>
           <Text style={styles.timer}>{connecting ? "…" : fmt(seconds)}</Text>
         </View>
 
         {/* Avatar + status */}
         <View style={styles.center}>
-          <Animated.View style={[styles.avatarRing, avatarStyle]}>
-            <Image source={{ uri: p.bg }} style={styles.avatarImg} contentFit="cover" />
-            <View style={styles.avatarScrim} />
-            <Text style={styles.avatarInitial}>{initialFor(persona)}</Text>
-          </Animated.View>
+          {isGroup ? (
+            <View style={styles.groupAvatars}>
+              {(["mom", "dad"] as const).map((k) => {
+                const activeK = speaking === k;
+                return (
+                  <Animated.View
+                    key={k}
+                    style={[
+                      styles.groupAvatar,
+                      activeK ? avatarStyle : undefined,
+                      {
+                        opacity: !speaking || activeK ? 1 : 0.5,
+                        borderColor: activeK ? PERSONAS[k].color : "rgba(255,255,255,0.3)",
+                      },
+                    ]}
+                  >
+                    <Image source={{ uri: PERSONAS[k].bg }} style={styles.avatarImg} contentFit="cover" />
+                    <View style={styles.avatarScrim} />
+                    <Text style={styles.groupInitial}>{initialFor(k)}</Text>
+                  </Animated.View>
+                );
+              })}
+            </View>
+          ) : (
+            <Animated.View style={[styles.avatarRing, avatarStyle]}>
+              <Image source={{ uri: p.bg }} style={styles.avatarImg} contentFit="cover" />
+              <View style={styles.avatarScrim} />
+              <Text style={styles.avatarInitial}>{initialFor(persona)}</Text>
+            </Animated.View>
+          )}
           <Text style={styles.statusText} testID="call-status">
             {statusText}
           </Text>
           <View style={styles.waveWrap}>
-            <Waveform active={active} color="rgba(255,255,255,0.92)" />
+            <Waveform active={active} color={speaking ? PERSONAS[speaking].color : "rgba(255,255,255,0.92)"} />
           </View>
         </View>
 
@@ -226,7 +297,7 @@ export default function CallScreen() {
                 entering={FadeIn.duration(260)}
                 style={[styles.turn, t.sender === "user" ? styles.turnUser : styles.turnParent]}
               >
-                <Text style={styles.turnWho}>{t.sender === "user" ? "You" : name}</Text>
+                <Text style={styles.turnWho}>{t.sender === "user" ? "You" : nameFor(t.sender)}</Text>
                 <Text style={styles.turnText}>{t.text}</Text>
               </Animated.View>
             ))}
@@ -299,6 +370,17 @@ const styles = StyleSheet.create({
   avatarImg: { ...StyleSheet.absoluteFillObject },
   avatarScrim: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(31,42,38,0.25)" },
   avatarInitial: { fontFamily: font.extrabold, fontSize: 58, color: "#fff" },
+  groupAvatars: { flexDirection: "row", gap: spacing.lg, alignItems: "center", justifyContent: "center" },
+  groupAvatar: {
+    width: 112,
+    height: 112,
+    borderRadius: 56,
+    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 3,
+  },
+  groupInitial: { fontFamily: font.extrabold, fontSize: 44, color: "#fff" },
   statusText: { fontFamily: font.semibold, fontSize: 18, color: "#fff", marginTop: spacing.lg },
   waveWrap: { marginTop: spacing.md, height: 64, justifyContent: "center" },
   transcriptBox: { flex: 1, marginTop: spacing.md, marginBottom: spacing.md },

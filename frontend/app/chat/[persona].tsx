@@ -230,9 +230,14 @@ export default function ChatScreen() {
             <Ionicons name="call" size={20} color={colors.brand} />
           </Pressable>
         ) : (
-          <View style={styles.callBtn}>
-            <Ionicons name="people" size={20} color={colors.clay} />
-          </View>
+          <Pressable
+            testID="chat-call-btn"
+            onPress={() => router.push(`/call/family`)}
+            hitSlop={10}
+            style={styles.callBtn}
+          >
+            <Ionicons name="call" size={20} color={colors.clay} />
+          </Pressable>
         )}
       </View>
 

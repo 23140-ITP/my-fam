@@ -51,6 +51,14 @@ coral #E59B86 Mom, blue #6E8FC4 Dad, clay #C08A61 group. See `/app/design_guidel
   (reachable from Home bookmark icon + Profile row) with delete. Backend `/api/notes` (soft-delete).
 - Tests: 10/10 new backend + full frontend pass (iteration_2); iteration_1 still green.
 
+## Implemented — Iteration 3 (2026-06)
+- **Voice For Group**: the Family group chat now has a call button (`/call/family`). On a group call
+  the connect greeting and every reply are spoken by BOTH parents in turn — Mom first (her voice),
+  then Dad (his voice) — driven by a sequential speech queue in `call/[persona].tsx`. Two avatars
+  are shown; the currently-speaking parent is highlighted and the waveform + "…is talking" status
+  follow whoever is speaking. Backend `/api/chat` already returns both replies; each is synthesized
+  with that parent's chosen TTS voice via `/api/tts`.
+
 ## User Personas
 - Young adult / student living away from home who misses parental check-ins and encouragement.
 - Anyone wanting a warm daily wellbeing nudge (food/water/sleep) with an emotional companion.
