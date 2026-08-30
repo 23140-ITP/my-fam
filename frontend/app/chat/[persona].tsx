@@ -29,6 +29,7 @@ import {
   spacing,
 } from "@/src/constants/theme";
 import { api, Message } from "@/src/lib/api";
+import { useFamily } from "@/src/store/family";
 import { useRecorder } from "@/src/hooks/useRecorder";
 import { haptic } from "@/src/lib/haptics";
 
@@ -50,12 +51,25 @@ export default function ChatScreen() {
   const [recError, setRecError] = useState<null | "denied" | "blocked">(null);
   const listRef = useRef<FlatList<Message>>(null);
   const recorder = useRecorder();
+  const { nameFor, initialFor } = useFamily();
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [noteMap, setNoteMap] = useState<Record<string, string>>({});
+  const [toast, setToast] = useState<string | null>(null);
+  const displayName = isGroup ? "Family group" : nameFor(persona);
 
   useEffect(() => {
     (async () => {
       try {
-        const data = await api.messages(persona);
+        const [data, n] = await Promise.all([api.messages(persona), api.notes()]);
         setMessages(data.messages);
+        const ids = new Set<string>();
+        const map: Record<string, string> = {};
+        n.notes.forEach((note) => {
+          ids.add(note.message_id);
+          map[note.message_id] = note.id;
+        });
+        setSavedIds(ids);
+        setNoteMap(map);
       } catch {
         /* keep */
       } finally {
@@ -117,18 +131,74 @@ export default function ChatScreen() {
     }
   }, [recorder]);
 
+  const flashToast = useCallback((msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 1600);
+  }, []);
+
+  const toggleSave = useCallback(
+    async (message: Message) => {
+      if (message.sender === "user") return;
+      haptic.light();
+      if (savedIds.has(message.id)) {
+        const noteId = noteMap[message.id];
+        setSavedIds((s) => {
+          const n = new Set(s);
+          n.delete(message.id);
+          return n;
+        });
+        flashToast("Removed from Notes");
+        if (noteId) {
+          try {
+            await api.deleteNote(noteId);
+          } catch {
+            /* ignore */
+          }
+        }
+      } else {
+        setSavedIds((s) => new Set(s).add(message.id));
+        flashToast("Saved to Notes from Home 💛");
+        try {
+          const note = await api.addNote({
+            conversation: persona,
+            sender: message.sender as "mom" | "dad",
+            text: message.text,
+            message_id: message.id,
+            created_at: message.created_at,
+          });
+          setNoteMap((m) => ({ ...m, [message.id]: note.id }));
+        } catch {
+          /* ignore */
+        }
+      }
+    },
+    [savedIds, noteMap, persona, flashToast],
+  );
+
   const renderItem = useCallback(
     ({ item, index }: { item: Message; index: number }) => {
       const prev = messages[index - 1];
       const showMeta = isGroup && item.sender !== "user" && (!prev || prev.sender !== item.sender);
-      return <ChatBubble message={item} group={isGroup} showMeta={showMeta} index={index} />;
+      const parent = item.sender !== "user" ? (item.sender as "mom" | "dad") : null;
+      return (
+        <ChatBubble
+          message={item}
+          group={isGroup}
+          showMeta={showMeta}
+          index={index}
+          name={parent ? nameFor(parent) : undefined}
+          initial={parent ? initialFor(parent) : undefined}
+          saved={savedIds.has(item.id)}
+          onSave={parent ? () => toggleSave(item) : undefined}
+        />
+      );
     },
-    [messages, isGroup],
+    [messages, isGroup, nameFor, initialFor, savedIds, toggleSave],
   );
 
   const subtitle = typing
     ? isGroup
-      ? `${typing === "mom" ? "Mom" : "Dad"} is typing…`
+      ? `${nameFor(typing)} is typing…`
       : "typing…"
     : p.subtitle;
 
@@ -141,10 +211,10 @@ export default function ChatScreen() {
         <Pressable testID="chat-back" onPress={() => router.back()} hitSlop={10} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={26} color={colors.brand} />
         </Pressable>
-        <Avatar persona={persona} size={38} />
+        <Avatar persona={persona} size={38} initial={isGroup ? undefined : initialFor(persona)} />
         <View style={styles.headerText}>
           <Text style={styles.headerName} numberOfLines={1}>
-            {isGroup ? "Family group" : p.name}
+            {displayName}
           </Text>
           <Text style={[styles.headerSub, typing ? { color: p.deep } : null]} numberOfLines={1}>
             {subtitle}
@@ -235,7 +305,7 @@ export default function ChatScreen() {
           <TextInput
             testID="chat-input"
             style={styles.input}
-            placeholder={`Message ${isGroup ? "the family" : p.name}…`}
+            placeholder={`Message ${isGroup ? "the family" : nameFor(persona)}…`}
             placeholderTextColor={colors.textFaint}
             value={input}
             onChangeText={setInput}
@@ -261,6 +331,14 @@ export default function ChatScreen() {
           )}
         </View>
       </KeyboardAvoidingView>
+
+      {toast ? (
+        <View style={[styles.toast, { bottom: (insets.bottom || spacing.sm) + 78, pointerEvents: "none" }]}>
+          <Text style={styles.toastText} testID="chat-toast">
+            {toast}
+          </Text>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -349,4 +427,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   micActive: { backgroundColor: colors.danger },
+  toast: {
+    position: "absolute",
+    alignSelf: "center",
+    backgroundColor: colors.text,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.xl,
+    borderRadius: radius.pill,
+  },
+  toastText: { fontFamily: font.semibold, fontSize: 13.5, color: colors.surface },
 });

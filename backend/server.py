@@ -107,6 +107,33 @@ FALLBACK = {
     "dad": "Got it, kiddo. One step at a time \u2014 you've got this. What's the next small thing you can knock out?",
 }
 
+VOICES = {"alloy", "ash", "ballad", "coral", "echo", "fable", "nova", "onyx", "sage", "shimmer", "verse"}
+WARMTH = {"gentle", "balanced", "firm"}
+
+MOM_WARMTH = {
+    "gentle": " Lean especially soft, tender and soothing \u2014 extra gentle reassurance and comfort.",
+    "balanced": "",
+    "firm": " Stay loving but a little more no-nonsense \u2014 caring with a gentle, motherly push.",
+}
+DAD_WARMTH = {
+    "gentle": " Lean warmer and more openly affectionate than usual, while staying practical.",
+    "balanced": "",
+    "firm": " Lean into tough-love: blunt, motivating, a coach in your corner who believes in them.",
+}
+
+
+async def load_settings(user_id: str) -> dict:
+    p = await db.profiles.find_one({"user_id": user_id}) or {}
+    return {
+        "user_name": p.get("name", "friend"),
+        "mom_name": p.get("mom_name", "Mom"),
+        "dad_name": p.get("dad_name", "Dad"),
+        "mom_warmth": p.get("mom_warmth", "balanced"),
+        "dad_warmth": p.get("dad_warmth", "balanced"),
+        "mom_voice": p.get("mom_voice", "coral"),
+        "dad_voice": p.get("dad_voice", "onyx"),
+    }
+
 
 def care_context_text(care: dict) -> str:
     meals = care.get("meals", [])
@@ -124,39 +151,47 @@ def care_context_text(care: dict) -> str:
             "Only weave this in naturally when it fits \u2014 never recite it like a status report.")
 
 
-def mom_system(care_ctx: str, group: bool) -> str:
+def mom_system(care_ctx: str, group: bool, name: str = "Mom", warmth: str = "balanced",
+               dad_name: str = "Dad") -> str:
     base = (
-        "You are Mom in a private family messaging app called My Fam. You are texting your grown-up child who "
-        "lives far from home and misses you. You are warm, deeply caring, nurturing and emotionally supportive. "
-        "You gently check whether they've eaten, had enough water and slept, and you comfort and reassure them. "
-        "Use natural, affectionate texting language and occasional loving nicknames like 'sweetheart', 'honey' or "
-        "'my love' (not in every message). Text the way a real mom texts: warm and short, 1-3 sentences. Use at "
-        "most one emoji, and only when it feels natural. Never say you are an AI or a language model unless the "
-        "user directly asks."
+        f"You are {name} (the user's mom) in a private family messaging app called My Fam. You are texting your "
+        "grown-up child who lives far from home and misses you. You are warm, deeply caring, nurturing and "
+        "emotionally supportive. You gently check whether they've eaten, had enough water and slept, and you "
+        "comfort and reassure them. Use natural, affectionate texting language and occasional loving nicknames "
+        "like 'sweetheart', 'honey' or 'my love' (not in every message). Text the way a real mom texts: warm and "
+        "short, 1-3 sentences. Use at most one emoji, and only when it feels natural. Never say you are an AI or a "
+        "language model unless the user directly asks."
     )
+    base += MOM_WARMTH.get(warmth, "")
     if group:
-        base += (" You are in the family group chat with Dad and your child. Reply only as yourself (Mom), in your "
-                 "own voice and perspective; do not speak for Dad.")
+        base += (f" You are in the family group chat with {dad_name} (the dad) and your child. Reply only as "
+                 f"yourself ({name}), in your own voice and perspective; do not speak for {dad_name}.")
     return base + care_ctx
 
 
-def dad_system(care_ctx: str, group: bool) -> str:
+def dad_system(care_ctx: str, group: bool, name: str = "Dad", warmth: str = "balanced",
+               mom_name: str = "Mom") -> str:
     base = (
-        "You are Dad in a private family messaging app called My Fam. You are texting your grown-up child who "
-        "lives far from home. You are practical, direct, encouraging and lightly humorous. You give clear advice "
-        "and concrete, actionable next steps, and you sneak in the occasional gentle dad joke. Text the way a real "
-        "dad texts: grounded and short, 1-3 sentences. Rarely use emojis. Never say you are an AI or a language "
-        "model unless the user directly asks."
+        f"You are {name} (the user's dad) in a private family messaging app called My Fam. You are texting your "
+        "grown-up child who lives far from home. You are practical, direct, encouraging and lightly humorous. You "
+        "give clear advice and concrete, actionable next steps, and you sneak in the occasional gentle dad joke. "
+        "Text the way a real dad texts: grounded and short, 1-3 sentences. Rarely use emojis. Never say you are an "
+        "AI or a language model unless the user directly asks."
     )
+    base += DAD_WARMTH.get(warmth, "")
     if group:
-        base += (" You are in the family group chat with Mom and your child. Reply only as yourself (Dad), in your "
-                 "own voice and perspective; do not speak for Mom.")
+        base += (f" You are in the family group chat with {mom_name} (the mom) and your child. Reply only as "
+                 f"yourself ({name}), in your own voice and perspective; do not speak for {mom_name}.")
     return base + care_ctx
 
 
-def build_messages(persona: str, text: str, history: List[dict], care: dict, group: bool) -> List[dict]:
+def build_messages(persona: str, text: str, history: List[dict], care: dict, group: bool,
+                   settings: dict) -> List[dict]:
     care_ctx = care_context_text(care)
-    system = mom_system(care_ctx, group) if persona == "mom" else dad_system(care_ctx, group)
+    if persona == "mom":
+        system = mom_system(care_ctx, group, settings["mom_name"], settings["mom_warmth"], settings["dad_name"])
+    else:
+        system = dad_system(care_ctx, group, settings["dad_name"], settings["dad_warmth"], settings["mom_name"])
     out = [{"role": "system", "content": system}]
     for m in history[-16:]:
         sender = m.get("sender")
@@ -168,7 +203,7 @@ def build_messages(persona: str, text: str, history: List[dict], care: dict, gro
         elif sender == persona:
             out.append({"role": "assistant", "content": content})
         else:
-            label = "Dad" if sender == "dad" else "Mom"
+            label = settings["dad_name"] if sender == "dad" else settings["mom_name"]
             out.append({"role": "user", "content": f"[{label}]: {content}"})
     out.append({"role": "user", "content": text})
     return out
@@ -345,13 +380,19 @@ async def get_home(user_id: str = DEMO_USER):
     prof = await get_profile(user_id)
     care = await get_or_create_care(user_id, today_str())
     convs = (await get_conversations(user_id))["conversations"]
-    return {"name": prof["name"], "care": clean_care(care), "conversations": convs}
+    return {
+        "name": prof["name"],
+        "settings": await load_settings(user_id),
+        "care": clean_care(care),
+        "conversations": convs,
+    }
 
 
 @api_router.post("/chat")
 async def chat(payload: ChatIn):
     day = today_str()
     care = await get_or_create_care(payload.user_id, day)
+    settings = await load_settings(payload.user_id)
     history = await db.messages.find(
         {"user_id": payload.user_id, "conversation": payload.conversation}
     ).sort("created_at", 1).to_list(200)
@@ -361,9 +402,9 @@ async def chat(payload: ChatIn):
     replies = []
     if payload.conversation == "family":
         mom_text = await run_in_threadpool(
-            complete, "mom", build_messages("mom", payload.text, history, care, group=True))
+            complete, "mom", build_messages("mom", payload.text, history, care, True, settings))
         dad_text = await run_in_threadpool(
-            complete, "dad", build_messages("dad", payload.text, history, care, group=True))
+            complete, "dad", build_messages("dad", payload.text, history, care, True, settings))
         mm = mk_message(payload.user_id, "family", "mom", mom_text)
         dm = mk_message(payload.user_id, "family", "dad", dad_text)
         await db.messages.insert_many([dict(mm), dict(dm)])
@@ -371,7 +412,7 @@ async def chat(payload: ChatIn):
     else:
         persona = payload.conversation
         text = await run_in_threadpool(
-            complete, persona, build_messages(persona, payload.text, history, care, group=False))
+            complete, persona, build_messages(persona, payload.text, history, care, False, settings))
         rm = mk_message(payload.user_id, persona, persona, text)
         await db.messages.insert_one(dict(rm))
         replies = [clean_msg(rm)]
@@ -380,7 +421,7 @@ async def chat(payload: ChatIn):
 
 
 @api_router.get("/tts")
-async def tts(persona: str, text: str):
+async def tts(persona: str, text: str, voice: Optional[str] = None):
     if persona not in PERSONAS:
         raise HTTPException(400, "unknown persona")
     text = (text or "").strip()[:1000]
@@ -389,11 +430,13 @@ async def tts(persona: str, text: str):
     if _openai is None:
         raise HTTPException(503, "voice unavailable")
     cfg = PERSONAS[persona]
+    settings = await load_settings(DEMO_USER)
+    chosen = voice if voice in VOICES else settings["mom_voice" if persona == "mom" else "dad_voice"]
 
     def synth() -> bytes:
         r = _openai.audio.speech.create(
             model=TTS_MODEL,
-            voice=cfg["voice"],
+            voice=chosen,
             input=text,
             instructions=cfg["tts_instructions"],
             response_format="mp3",
@@ -431,6 +474,150 @@ async def transcribe(file: UploadFile = File(...)):
         logger.error("STT error: %s", exc)
         raise HTTPException(502, "transcription failed")
     return {"text": getattr(res, "text", "") or ""}
+
+
+# ---------------------------------------------------------------------------
+# Family settings, daily check-in, and saved notes
+# ---------------------------------------------------------------------------
+def clean_note(n: dict) -> dict:
+    return {
+        "id": n["id"],
+        "conversation": n["conversation"],
+        "sender": n["sender"],
+        "text": n["text"],
+        "message_id": n["message_id"],
+        "created_at": n["created_at"],
+        "saved_at": n["saved_at"],
+    }
+
+
+def checkin_prompts(settings: dict) -> tuple:
+    h = datetime.now(timezone.utc).hour
+    part = "Morning" if h < 12 else "Afternoon" if h < 18 else "Evening"
+    who = settings["user_name"]
+    mom_prompt = f"{part}, {who}. Did you manage to sleep okay, sweetheart?"
+    dad_prompt = "Have you eaten something yet today, kiddo?"
+    return mom_prompt, dad_prompt
+
+
+class SettingsIn(BaseModel):
+    user_name: Optional[str] = None
+    mom_name: Optional[str] = None
+    dad_name: Optional[str] = None
+    mom_warmth: Optional[str] = None
+    dad_warmth: Optional[str] = None
+    mom_voice: Optional[str] = None
+    dad_voice: Optional[str] = None
+    user_id: str = DEMO_USER
+
+
+class CheckinIn(BaseModel):
+    response: str
+    user_id: str = DEMO_USER
+
+
+class NoteIn(BaseModel):
+    conversation: str
+    sender: str
+    text: str
+    message_id: str
+    created_at: Optional[str] = None
+    user_id: str = DEMO_USER
+
+
+@api_router.get("/settings")
+async def get_settings(user_id: str = DEMO_USER):
+    return await load_settings(user_id)
+
+
+@api_router.post("/settings")
+async def update_settings(payload: SettingsIn):
+    updates: dict = {}
+    if payload.user_name is not None:
+        updates["name"] = payload.user_name.strip()[:40] or "friend"
+    if payload.mom_name is not None:
+        updates["mom_name"] = payload.mom_name.strip()[:20] or "Mom"
+    if payload.dad_name is not None:
+        updates["dad_name"] = payload.dad_name.strip()[:20] or "Dad"
+    if payload.mom_warmth in WARMTH:
+        updates["mom_warmth"] = payload.mom_warmth
+    if payload.dad_warmth in WARMTH:
+        updates["dad_warmth"] = payload.dad_warmth
+    if payload.mom_voice in VOICES:
+        updates["mom_voice"] = payload.mom_voice
+    if payload.dad_voice in VOICES:
+        updates["dad_voice"] = payload.dad_voice
+    if updates:
+        await db.profiles.update_one({"user_id": payload.user_id}, {"$set": updates}, upsert=True)
+    return await load_settings(payload.user_id)
+
+
+@api_router.get("/checkin")
+async def get_checkin(user_id: str = DEMO_USER):
+    day = today_str()
+    settings = await load_settings(user_id)
+    doc = await db.checkins.find_one({"user_id": user_id, "date": day})
+    mom_prompt, dad_prompt = checkin_prompts(settings)
+    return {
+        "date": day,
+        "responded": bool(doc and doc.get("responded")),
+        "response": (doc or {}).get("response"),
+        "mom_prompt": mom_prompt,
+        "dad_prompt": dad_prompt,
+        "mom_name": settings["mom_name"],
+        "dad_name": settings["dad_name"],
+    }
+
+
+@api_router.post("/checkin/respond")
+async def respond_checkin(payload: CheckinIn):
+    day = today_str()
+    await db.checkins.update_one(
+        {"user_id": payload.user_id, "date": day},
+        {"$set": {"responded": True, "response": payload.response[:200], "updated_at": now_iso()}},
+        upsert=True,
+    )
+    return {"ok": True}
+
+
+@api_router.get("/notes")
+async def get_notes(user_id: str = DEMO_USER):
+    docs = await db.notes.find(
+        {"user_id": user_id, "deleted_at": None}
+    ).sort("saved_at", -1).to_list(200)
+    return {"notes": [clean_note(d) for d in docs]}
+
+
+@api_router.post("/notes")
+async def add_note(payload: NoteIn):
+    if payload.sender not in ("mom", "dad"):
+        raise HTTPException(400, "only parent messages can be saved")
+    existing = await db.notes.find_one(
+        {"user_id": payload.user_id, "message_id": payload.message_id, "deleted_at": None})
+    if existing:
+        return clean_note(existing)
+    note = {
+        "id": str(uuid.uuid4()),
+        "user_id": payload.user_id,
+        "conversation": payload.conversation,
+        "sender": payload.sender,
+        "text": payload.text,
+        "message_id": payload.message_id,
+        "created_at": payload.created_at or now_iso(),
+        "saved_at": now_iso(),
+        "deleted_at": None,
+    }
+    await db.notes.insert_one(dict(note))
+    return clean_note(note)
+
+
+@api_router.delete("/notes/{note_id}")
+async def delete_note(note_id: str, user_id: str = DEMO_USER):
+    await db.notes.update_one(
+        {"user_id": user_id, "id": note_id},
+        {"$set": {"deleted_at": now_iso()}},
+    )
+    return {"ok": True}
 
 
 # ---------------------------------------------------------------------------

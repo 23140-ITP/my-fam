@@ -25,7 +25,10 @@ import {
   shadow,
   spacing,
 } from "@/src/constants/theme";
-import { api, Care, Conversation } from "@/src/lib/api";
+import { api, Care, Checkin, Conversation } from "@/src/lib/api";
+import { useFamily } from "@/src/store/family";
+import { CheckInCard } from "@/src/components/CheckInCard";
+import { haptic } from "@/src/lib/haptics";
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -34,13 +37,16 @@ export default function HomeScreen() {
   const [care, setCare] = useState<Care | null>(null);
   const [convos, setConvos] = useState<Conversation[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [checkin, setCheckin] = useState<Checkin | null>(null);
+  const { nameFor, initialFor } = useFamily();
 
   const load = useCallback(async () => {
     try {
-      const data = await api.home();
+      const [data, ci] = await Promise.all([api.home(), api.checkin()]);
       setName(data.name);
       setCare(data.care);
       setConvos(data.conversations);
+      setCheckin(ci);
     } catch {
       /* keep last state */
     }
@@ -57,6 +63,27 @@ export default function HomeScreen() {
     await load();
     setRefreshing(false);
   }, [load]);
+
+  const respondCheckin = useCallback(
+    async (text: string, action?: "sleptWell" | "rough" | "ate") => {
+      haptic.light();
+      try {
+        if (action === "sleptWell") await api.setSleep(true, 7.5);
+        else if (action === "rough") await api.setSleep(false, 5);
+        else if (action === "ate") {
+          const h = new Date().getHours();
+          const label = h < 11 ? "Breakfast" : h < 16 ? "Lunch" : h < 21 ? "Dinner" : "Snack";
+          if (!care?.meals.some((m) => m.label === label)) await api.toggleMeal(label);
+        }
+        await api.respondCheckin(text);
+      } catch {
+        /* ignore */
+      }
+      setCheckin((c) => (c ? { ...c, responded: true } : c));
+      load();
+    },
+    [care, load],
+  );
 
   const water = care?.water_glasses ?? 0;
   const waterGoal = care?.water_goal ?? 8;
@@ -83,15 +110,29 @@ export default function HomeScreen() {
             </Text>
             <Text style={styles.sub}>How are you feeling today?</Text>
           </View>
-          <Pressable
-            testID="home-profile-btn"
-            onPress={() => router.push("/profile")}
-            style={styles.profileBtn}
-            hitSlop={8}
-          >
-            <Ionicons name="person" size={20} color={colors.brand} />
-          </Pressable>
+          <View style={styles.headerBtns}>
+            <Pressable
+              testID="home-notes-btn"
+              onPress={() => router.push("/notes")}
+              style={styles.profileBtn}
+              hitSlop={8}
+            >
+              <Ionicons name="bookmark-outline" size={20} color={colors.brand} />
+            </Pressable>
+            <Pressable
+              testID="home-profile-btn"
+              onPress={() => router.push("/profile")}
+              style={styles.profileBtn}
+              hitSlop={8}
+            >
+              <Ionicons name="person" size={20} color={colors.brand} />
+            </Pressable>
+          </View>
         </View>
+
+        {checkin && !checkin.responded ? (
+          <CheckInCard checkin={checkin} onRespond={respondCheckin} />
+        ) : null}
 
         <Animated.View entering={FadeInDown.duration(320)} style={[styles.careCard, shadow]}>
           <View style={styles.careHead}>
@@ -156,11 +197,11 @@ export default function HomeScreen() {
                 style={styles.chatRow}
                 onPress={() => router.push(`/chat/${key}`)}
               >
-                <Avatar persona={key} size={54} />
+                <Avatar persona={key} size={54} initial={initialFor(key)} />
                 <View style={styles.chatMid}>
-                  <Text style={styles.chatName}>{key === "family" ? "Family group" : p.name}</Text>
+                  <Text style={styles.chatName}>{key === "family" ? "Family group" : nameFor(key)}</Text>
                   <Text style={styles.chatSnippet} numberOfLines={1}>
-                    {previewText(conv)}
+                    {previewText(conv, nameFor)}
                   </Text>
                 </View>
                 <View style={styles.chatRight}>
@@ -200,13 +241,13 @@ function CareStat({
   );
 }
 
-function previewText(conv?: Conversation): string {
+function previewText(conv: Conversation | undefined, nameFor: (p: PersonaKey) => string): string {
   if (!conv || !conv.last_text) return "Say hi 👋";
   const who =
     conv.last_sender === "user"
       ? "You: "
       : conv.conversation === "family"
-        ? `${conv.last_sender === "mom" ? "Mom" : "Dad"}: `
+        ? `${nameFor(conv.last_sender as PersonaKey)}: `
         : "";
   return `${who}${conv.last_text}`;
 }
@@ -255,6 +296,7 @@ const styles = StyleSheet.create({
   headerRow: { flexDirection: "row", alignItems: "center", marginBottom: spacing.xl },
   greeting: { fontFamily: font.extrabold, fontSize: 27, color: colors.text, letterSpacing: -0.5 },
   sub: { fontFamily: font.regular, fontSize: 15, color: colors.textMuted, marginTop: 3 },
+  headerBtns: { flexDirection: "row", gap: spacing.sm },
   profileBtn: {
     width: 44,
     height: 44,

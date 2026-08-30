@@ -28,6 +28,36 @@ export type Conversation = {
   unread: boolean;
 };
 
+export type FamilySettings = {
+  user_name: string;
+  mom_name: string;
+  dad_name: string;
+  mom_warmth: string;
+  dad_warmth: string;
+  mom_voice: string;
+  dad_voice: string;
+};
+
+export type Note = {
+  id: string;
+  conversation: PersonaKey;
+  sender: "mom" | "dad";
+  text: string;
+  message_id: string;
+  created_at: string;
+  saved_at: string;
+};
+
+export type Checkin = {
+  date: string;
+  responded: boolean;
+  response: string | null;
+  mom_prompt: string;
+  dad_prompt: string;
+  mom_name: string;
+  dad_name: string;
+};
+
 async function getJSON<T>(path: string): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`);
   if (!res.ok) throw new Error(`GET ${path} -> ${res.status}`);
@@ -41,6 +71,12 @@ async function postJSON<T>(path: string, body: unknown): Promise<T> {
     body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error(`POST ${path} -> ${res.status}`);
+  return res.json();
+}
+
+async function del<T>(path: string): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, { method: "DELETE" });
+  if (!res.ok) throw new Error(`DELETE ${path} -> ${res.status}`);
   return res.json();
 }
 
@@ -58,6 +94,21 @@ export const api = {
   conversations: () => getJSON<{ conversations: Conversation[] }>("/conversations"),
   profile: () => getJSON<{ name: string }>("/profile"),
   setProfile: (name: string) => postJSON<{ name: string }>("/profile", { name }),
-  ttsUrl: (persona: PersonaKey, text: string) =>
-    `${API_BASE}/tts?persona=${persona}&text=${encodeURIComponent(text.slice(0, 900))}`,
+  settings: () => getJSON<FamilySettings>("/settings"),
+  updateSettings: (partial: Partial<FamilySettings>) => postJSON<FamilySettings>("/settings", partial),
+  checkin: () => getJSON<Checkin>("/checkin"),
+  respondCheckin: (response: string) => postJSON<{ ok: boolean }>("/checkin/respond", { response }),
+  notes: () => getJSON<{ notes: Note[] }>("/notes"),
+  addNote: (note: {
+    conversation: PersonaKey;
+    sender: "mom" | "dad";
+    text: string;
+    message_id: string;
+    created_at?: string;
+  }) => postJSON<Note>("/notes", note),
+  deleteNote: (id: string) => del<{ ok: boolean }>(`/notes/${id}`),
+  ttsUrl: (persona: PersonaKey, text: string, voice?: string) =>
+    `${API_BASE}/tts?persona=${persona}&text=${encodeURIComponent(text.slice(0, 900))}${
+      voice ? `&voice=${voice}` : ""
+    }`,
 };

@@ -15,10 +15,12 @@ import {
   spacing,
 } from "@/src/constants/theme";
 import { api, Conversation } from "@/src/lib/api";
+import { useFamily } from "@/src/store/family";
 
 export default function ChatsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { nameFor, initialFor } = useFamily();
   const [convos, setConvos] = useState<Conversation[]>([]);
 
   const load = useCallback(async () => {
@@ -59,11 +61,11 @@ export default function ChatsScreen() {
                   style={styles.row}
                   onPress={() => router.push(`/chat/${key}`)}
                 >
-                  <Avatar persona={key} size={56} />
+                  <Avatar persona={key} size={56} initial={initialFor(key)} />
                   <View style={styles.mid}>
-                    <Text style={styles.name}>{key === "family" ? "Family group" : p.name}</Text>
+                    <Text style={styles.name}>{key === "family" ? "Family group" : nameFor(key)}</Text>
                     <Text style={styles.snippet} numberOfLines={1}>
-                      {preview(conv)}
+                      {preview(conv, nameFor)}
                     </Text>
                   </View>
                   <View style={styles.right}>
@@ -80,13 +82,13 @@ export default function ChatsScreen() {
   );
 }
 
-function preview(conv?: Conversation): string {
+function preview(conv: Conversation | undefined, nameFor: (p: PersonaKey) => string): string {
   if (!conv || !conv.last_text) return "Start the conversation 💬";
   const who =
     conv.last_sender === "user"
       ? "You: "
       : conv.conversation === "family"
-        ? `${conv.last_sender === "mom" ? "Mom" : "Dad"}: `
+        ? `${nameFor(conv.last_sender as PersonaKey)}: `
         : "";
   return `${who}${conv.last_text}`;
 }

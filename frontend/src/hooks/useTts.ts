@@ -9,11 +9,11 @@ export function useTts() {
   const status = useAudioPlayerStatus(player);
 
   const speak = useCallback(
-    async (persona: PersonaKey, text: string) => {
+    async (persona: PersonaKey, text: string, voice?: string) => {
       if (persona === "family") return;
       try {
         await setAudioModeAsync({ playsInSilentMode: true });
-        player.replace({ uri: api.ttsUrl(persona, text) });
+        player.replace({ uri: api.ttsUrl(persona, text, voice) });
         player.play();
       } catch {
         /* ignore playback errors (e.g. web autoplay) */

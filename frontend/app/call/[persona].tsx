@@ -28,6 +28,7 @@ import { PERSONAS, PersonaKey, colors, font, radius, spacing } from "@/src/const
 import { api } from "@/src/lib/api";
 import { useRecorder } from "@/src/hooks/useRecorder";
 import { useTts } from "@/src/hooks/useTts";
+import { useFamily } from "@/src/store/family";
 import { haptic } from "@/src/lib/haptics";
 
 type Status = "connecting" | "idle" | "listening" | "thinking" | "speaking";
@@ -47,6 +48,8 @@ export default function CallScreen() {
   const router = useRouter();
   const recorder = useRecorder();
   const tts = useTts();
+  const { nameFor, initialFor } = useFamily();
+  const name = nameFor(persona);
 
   const [status, setStatus] = useState<Status>("connecting");
   const [muted, setMuted] = useState(false);
@@ -177,7 +180,7 @@ export default function CallScreen() {
         : status === "thinking"
           ? "Thinking…"
           : status === "speaking"
-            ? `${p.name} is talking…`
+            ? `${name} is talking…`
             : "Tap to talk";
 
   return (
@@ -191,7 +194,7 @@ export default function CallScreen() {
       <View style={[styles.content, { paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom + spacing.lg }]}>
         {/* Top */}
         <View style={styles.top}>
-          <Text style={styles.calling}>Calling {p.name}</Text>
+          <Text style={styles.calling}>Calling {name}</Text>
           <Text style={styles.timer}>{connecting ? "…" : fmt(seconds)}</Text>
         </View>
 
@@ -200,7 +203,7 @@ export default function CallScreen() {
           <Animated.View style={[styles.avatarRing, avatarStyle]}>
             <Image source={{ uri: p.bg }} style={styles.avatarImg} contentFit="cover" />
             <View style={styles.avatarScrim} />
-            <Text style={styles.avatarInitial}>{p.initial}</Text>
+            <Text style={styles.avatarInitial}>{initialFor(persona)}</Text>
           </Animated.View>
           <Text style={styles.statusText} testID="call-status">
             {statusText}
@@ -223,7 +226,7 @@ export default function CallScreen() {
                 entering={FadeIn.duration(260)}
                 style={[styles.turn, t.sender === "user" ? styles.turnUser : styles.turnParent]}
               >
-                <Text style={styles.turnWho}>{t.sender === "user" ? "You" : p.name}</Text>
+                <Text style={styles.turnWho}>{t.sender === "user" ? "You" : name}</Text>
                 <Text style={styles.turnText}>{t.text}</Text>
               </Animated.View>
             ))}

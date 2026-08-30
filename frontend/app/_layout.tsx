@@ -12,6 +12,7 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { useIconFonts } from "@/src/hooks/use-icon-fonts";
 import { colors } from "@/src/constants/theme";
 import { loadHaptics } from "@/src/lib/haptics";
+import { FamilyProvider } from "@/src/store/family";
 
 // Disable logbox errors etc so that users can see the app
 // and agent works as expected.
@@ -52,21 +53,24 @@ export default function RootLayout() {
       <KeyboardProvider>
         <SafeAreaProvider>
           <BottomSheetModalProvider>
-            <StatusBar style="dark" />
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                contentStyle: { backgroundColor: colors.surface },
-              }}
-            >
-              <Stack.Screen name="index" />
-              <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="chat/[persona]" options={{ animation: "slide_from_right" }} />
-              <Stack.Screen
-                name="call/[persona]"
-                options={{ animation: "fade", presentation: "fullScreenModal" }}
-              />
-            </Stack>
+            <FamilyProvider>
+              <StatusBar style="dark" />
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  contentStyle: { backgroundColor: colors.surface },
+                }}
+              >
+                <Stack.Screen name="index" />
+                <Stack.Screen name="(tabs)" />
+                <Stack.Screen name="chat/[persona]" options={{ animation: "slide_from_right" }} />
+                <Stack.Screen name="notes" options={{ animation: "slide_from_right" }} />
+                <Stack.Screen
+                  name="call/[persona]"
+                  options={{ animation: "fade", presentation: "fullScreenModal" }}
+                />
+              </Stack>
+            </FamilyProvider>
           </BottomSheetModalProvider>
         </SafeAreaProvider>
       </KeyboardProvider>

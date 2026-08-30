@@ -9,10 +9,12 @@ export function Avatar({
   persona,
   size = 48,
   testID,
+  initial,
 }: {
   persona: PersonaKey;
   size: number;
   testID?: string;
+  initial?: string;
 }) {
   const p = PERSONAS[persona];
   return (
@@ -25,7 +27,9 @@ export function Avatar({
         {persona === "family" ? (
           <Ionicons name="people" size={size * 0.46} color="#FFFFFF" />
         ) : (
-          <Text style={{ fontFamily: font.bold, color: "#FFFFFF", fontSize: size * 0.42 }}>{p.initial}</Text>
+          <Text style={{ fontFamily: font.bold, color: "#FFFFFF", fontSize: size * 0.42 }}>
+            {initial || p.initial}
+          </Text>
         )}
       </View>
     </View>

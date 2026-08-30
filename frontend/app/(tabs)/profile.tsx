@@ -1,16 +1,21 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Pressable, StyleSheet, Switch, Text, TextInput, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 
 import { colors, font, radius, shadow, spacing } from "@/src/constants/theme";
 import { api } from "@/src/lib/api";
+import type { FamilySettings } from "@/src/lib/api";
 import { haptic, isHapticsEnabled, setHapticsEnabled } from "@/src/lib/haptics";
+import { useFamily } from "@/src/store/family";
+import { ParentSettings } from "@/src/components/ParentSettings";
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const { settings, update } = useFamily();
   const [name, setName] = useState("friend");
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
@@ -122,6 +127,39 @@ export default function ProfileScreen() {
           </Text>
         </View>
 
+        {/* Set your parents */}
+        <Text style={styles.sectionTitle}>Your family</Text>
+        <ParentSettings
+          persona="mom"
+          name={settings.mom_name}
+          warmth={settings.mom_warmth}
+          voice={settings.mom_voice}
+          onChange={(partial) => update(partial as Partial<FamilySettings>)}
+        />
+        <ParentSettings
+          persona="dad"
+          name={settings.dad_name}
+          warmth={settings.dad_warmth}
+          voice={settings.dad_voice}
+          onChange={(partial) => update(partial as Partial<FamilySettings>)}
+        />
+
+        {/* Notes from home */}
+        <Pressable
+          testID="profile-notes-row"
+          style={[styles.notesRow, shadow]}
+          onPress={() => router.push("/notes")}
+        >
+          <View style={[styles.settingIcon, { backgroundColor: colors.claySoft }]}>
+            <Ionicons name="bookmark" size={17} color={colors.clay} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.settingLabel}>Notes from home</Text>
+            <Text style={styles.notesSub}>Your saved keepsakes from Mom &amp; Dad</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.textFaint} />
+        </Pressable>
+
         {/* Settings */}
         <Text style={styles.sectionTitle}>Preferences</Text>
         <View style={[styles.settingsCard, shadow]}>
@@ -232,6 +270,16 @@ const styles = StyleSheet.create({
   settingLabel: { fontFamily: font.semibold, fontSize: 15, color: colors.text },
   settingValue: { fontFamily: font.medium, fontSize: 13.5, color: colors.textFaint },
   divider: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border },
+  notesRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    backgroundColor: colors.card,
+    borderRadius: radius.xl,
+    padding: spacing.lg,
+    marginBottom: spacing.xl,
+  },
+  notesSub: { fontFamily: font.regular, fontSize: 12.5, color: colors.textMuted, marginTop: 2 },
   footer: {
     fontFamily: font.regular,
     fontSize: 13,

@@ -29,8 +29,7 @@ warm voice-call screens, care tracker, and a no-login demo that feels alive.
 Ivory #F8F6F1 surface, white cards, dark-green #1F2A26 text, sage #3E6B62 brand/user bubbles,
 coral #E59B86 Mom, blue #6E8FC4 Dad, clay #C08A61 group. See `/app/design_guidelines.json`.
 
-## Implemented (2026-06)
-- Home: time-based greeting, 3 animated care rings (Meals/Water/Sleep), contextual nudge, recent
+## Implemented (2026-06)- Home: time-based greeting, 3 animated care rings (Meals/Water/Sleep), contextual nudge, recent
   family chat rows with unread dots, pull-to-refresh.
 - Chats list; direct Mom & Dad chats and Family group chat (iMessage bubbles, timestamps, typing
   indicators, quick replies, text input + mic, call button). Group shows Mom then Dad staggered.
@@ -41,6 +40,16 @@ coral #E59B86 Mom, blue #6E8FC4 Dad, clay #C08A61 group. See `/app/design_guidel
   (record → whisper → gpt-5.6 → TTS playback).
 - Profile: editable name, AI-companion disclaimer, haptics toggle.
 - OpenAI integration live (chat, TTS, STT). 19/19 backend tests + full frontend pass (iteration_1).
+
+## Implemented — Iteration 2 (2026-06)
+- **Set Your Parents** (Profile → "Your family"): rename Mom & Dad, pick warmth (gentle/balanced/firm)
+  and voice (per-parent OpenAI TTS voices with tap-to-preview). Persisted via `/api/settings` and
+  applied to chat system prompts, TTS voice, and display names app-wide via `FamilyProvider`.
+- **Daily Check-In** (Home, once/day): warm card with Mom & Dad prompt bubbles + quick chips that log
+  care (sleep/meal) and mark responded (`/api/checkin`, `/api/checkin/respond`).
+- **Notes From Home**: long-press any Mom/Dad message to save it; keepsakes live on `/notes`
+  (reachable from Home bookmark icon + Profile row) with delete. Backend `/api/notes` (soft-delete).
+- Tests: 10/10 new backend + full frontend pass (iteration_2); iteration_1 still green.
 
 ## User Personas
 - Young adult / student living away from home who misses parental check-ins and encouragement.

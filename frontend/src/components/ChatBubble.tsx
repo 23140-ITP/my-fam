@@ -1,6 +1,7 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import { Ionicons } from "@expo/vector-icons";
 
 import { Avatar } from "@/src/components/Avatar";
 import { PERSONAS, colors, font, formatTime, radius, spacing } from "@/src/constants/theme";
@@ -11,11 +12,19 @@ export function ChatBubble({
   group = false,
   showMeta = false,
   index = 0,
+  name,
+  initial,
+  saved = false,
+  onSave,
 }: {
   message: Message;
   group?: boolean;
   showMeta?: boolean;
   index?: number;
+  name?: string;
+  initial?: string;
+  saved?: boolean;
+  onSave?: () => void;
 }) {
   const isUser = message.sender === "user";
 
@@ -43,14 +52,24 @@ export function ChatBubble({
       testID={`bubble-${message.id}`}
     >
       {group ? (
-        <View style={styles.avatarSlot}>{showMeta ? <Avatar persona={persona} size={30} /> : null}</View>
+        <View style={styles.avatarSlot}>
+          {showMeta ? <Avatar persona={persona} size={30} initial={initial} /> : null}
+        </View>
       ) : null}
       <View style={styles.leftContent}>
-        {group && showMeta ? <Text style={[styles.name, { color: p.deep }]}>{p.name}</Text> : null}
-        <View style={[styles.bubble, styles.parentBubble, { backgroundColor: p.color }]}>
+        {group && showMeta ? <Text style={[styles.name, { color: p.deep }]}>{name || p.name}</Text> : null}
+        <Pressable
+          onLongPress={onSave}
+          delayLongPress={280}
+          testID={`bubble-save-${message.id}`}
+          style={[styles.bubble, styles.parentBubble, { backgroundColor: p.color }]}
+        >
           <Text style={[styles.text, { color: p.bubbleText }]}>{message.text}</Text>
+        </Pressable>
+        <View style={styles.metaRow}>
+          <Text style={styles.time}>{formatTime(message.created_at)}</Text>
+          {saved ? <Ionicons name="bookmark" size={11} color={p.deep} style={styles.savedIcon} /> : null}
         </View>
-        <Text style={styles.time}>{formatTime(message.created_at)}</Text>
       </View>
     </Animated.View>
   );
@@ -67,6 +86,8 @@ const styles = StyleSheet.create({
   text: { fontFamily: font.regular, fontSize: 15.5, lineHeight: 21 },
   userText: { color: "#FFFFFF" },
   name: { fontFamily: font.semibold, fontSize: 12, marginBottom: 3, marginLeft: 4 },
-  time: { fontFamily: font.regular, fontSize: 11, color: colors.textFaint, marginTop: 4, marginLeft: 6 },
-  timeRight: { marginRight: 6, marginLeft: 0 },
+  metaRow: { flexDirection: "row", alignItems: "center", marginTop: 4, marginLeft: 6 },
+  time: { fontFamily: font.regular, fontSize: 11, color: colors.textFaint },
+  timeRight: { marginRight: 6, marginLeft: 0, marginTop: 4 },
+  savedIcon: { marginLeft: 5 },
 });
