@@ -11,7 +11,6 @@ import {
   colors,
   font,
   formatTime,
-  radius,
   spacing,
 } from "@/src/constants/theme";
 import { api, Conversation } from "@/src/lib/api";
