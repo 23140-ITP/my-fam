@@ -134,7 +134,7 @@ export default function HomeScreen() {
           <CheckInCard checkin={checkin} onRespond={respondCheckin} />
         ) : null}
 
-        <Animated.View entering={FadeInDown.duration(320)} style={[styles.careCard, shadow]}>
+        <Animated.View entering={FadeInDown.duration(320)} style={styles.careCard}>
           <View style={styles.careHead}>
             <Text style={styles.cardTitle}>Today&apos;s care</Text>
             <Pressable
@@ -194,7 +194,7 @@ export default function HomeScreen() {
             <Animated.View key={key} entering={FadeInDown.duration(320).delay(120 + i * 60)}>
               <Pressable
                 testID={`home-chat-${key}`}
-                style={styles.chatRow}
+                style={({ pressed }) => [styles.chatRow, pressed && styles.chatRowPressed]}
                 onPress={() => router.push(`/chat/${key}`)}
               >
                 <Avatar persona={key} size={54} initial={initialFor(key)} />
@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: spacing.lg },
   headerRow: { flexDirection: "row", alignItems: "center", marginBottom: spacing.xl },
   greeting: { fontFamily: font.extrabold, fontSize: 27, color: colors.text, letterSpacing: -0.5 },
-  sub: { fontFamily: font.regular, fontSize: 15, color: colors.textMuted, marginTop: 3 },
+  sub: { fontFamily: font.regular, fontSize: 15.5, color: colors.textMuted, marginTop: 4 },
   headerBtns: { flexDirection: "row", gap: spacing.sm },
   profileBtn: {
     width: 44,
@@ -308,6 +308,8 @@ const styles = StyleSheet.create({
   careCard: {
     backgroundColor: colors.card,
     borderRadius: radius.xl,
+    borderWidth: 1,
+    borderColor: colors.border,
     padding: spacing.lg,
     marginBottom: spacing.lg,
   },
@@ -338,15 +340,15 @@ const styles = StyleSheet.create({
   chatRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.md,
+    paddingVertical: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
   },
+  chatRowPressed: { opacity: 0.68 },
   chatMid: { flex: 1, marginLeft: spacing.md },
   chatName: { fontFamily: font.bold, fontSize: 16, color: colors.text },
-  chatSnippet: { fontFamily: font.regular, fontSize: 13.5, color: colors.textMuted, marginTop: 2 },
+  chatSnippet: { fontFamily: font.regular, fontSize: 14, color: colors.textMuted, marginTop: 3 },
   chatRight: { alignItems: "flex-end", gap: 6 },
-  chatTime: { fontFamily: font.regular, fontSize: 11.5, color: colors.textFaint },
+  chatTime: { fontFamily: font.regular, fontSize: 12, color: colors.textFaint },
   dot: { width: 10, height: 10, borderRadius: 5 },
 });
