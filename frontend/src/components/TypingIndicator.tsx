@@ -36,8 +36,8 @@ export function TypingIndicator({ persona }: { persona: "mom" | "dad" }) {
       <Avatar persona={persona} size={30} />
       <View style={styles.content}>
         <Text style={[styles.name, { color: p.deep }]}>{p.name}</Text>
-        <View style={[styles.bubble, { backgroundColor: p.color }]}>
-          <Dot delay={0} color={p.bubbleText === "#FFFFFF" ? "#FFFFFF" : "#7A5344"} />
+        <View style={[styles.bubble, { backgroundColor: p.soft }]}>
+          <Dot delay={0} color={p.deep} />
           <Dot delay={140} color={p.bubbleText === "#FFFFFF" ? "#FFFFFF" : "#7A5344"} />
           <Dot delay={280} color={p.bubbleText === "#FFFFFF" ? "#FFFFFF" : "#7A5344"} />
         </View>
