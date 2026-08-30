@@ -639,7 +639,8 @@ async def get_reactions(conversation: str, user_id: str = DEMO_USER):
 async def toggle_reaction(payload: ReactionIn):
     doc = await db.reactions.find_one({"user_id": payload.user_id, "message_id": payload.message_id})
     if doc:
-        new_active = not doc.get("active", True)
+        same = bool(doc.get("active")) and doc.get("emoji") == payload.emoji
+        new_active = not same  # re-picking the same emoji clears it; a new emoji replaces it
         await db.reactions.update_one(
             {"_id": doc["_id"]},
             {"$set": {"active": new_active, "emoji": payload.emoji, "updated_at": now_iso()}},

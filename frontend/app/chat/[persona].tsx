@@ -19,6 +19,7 @@ import { Avatar } from "@/src/components/Avatar";
 import { ChatBubble } from "@/src/components/ChatBubble";
 import { TypingIndicator } from "@/src/components/TypingIndicator";
 import { QuickReplies } from "@/src/components/QuickReplies";
+import { ReactionPicker } from "@/src/components/ReactionPicker";
 import {
   PERSONAS,
   PersonaKey,
@@ -55,6 +56,10 @@ export default function ChatScreen() {
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [noteMap, setNoteMap] = useState<Record<string, string>>({});
   const [reactions, setReactions] = useState<Record<string, string>>({});
+  const [picker, setPicker] = useState<{
+    message: Message;
+    layout: { x: number; y: number; width: number; height: number };
+  } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const displayName = isGroup ? "Family group" : nameFor(persona);
 
@@ -185,20 +190,26 @@ export default function ChatScreen() {
     [savedIds, noteMap, persona, flashToast],
   );
 
-  const toggleReact = useCallback(
-    async (message: Message) => {
+  const setReactionEmoji = useCallback(
+    async (message: Message, emoji: string) => {
       if (message.sender === "user") return;
       haptic.light();
-      const had = !!reactions[message.id];
+      const willRemove = reactions[message.id] === emoji;
       setReactions((r) => {
         const n = { ...r };
-        if (had) delete n[message.id];
-        else n[message.id] = "❤️";
+        if (willRemove) delete n[message.id];
+        else n[message.id] = emoji;
         return n;
       });
-      if (!had) flashToast(`${nameFor(message.sender as "mom" | "dad")} felt your love 💛`);
+      if (!willRemove) {
+        flashToast(
+          emoji === "❤️"
+            ? `${nameFor(message.sender as "mom" | "dad")} felt your love 💛`
+            : `Reacted ${emoji}`,
+        );
+      }
       try {
-        await api.toggleReaction({ conversation: persona, message_id: message.id, emoji: "❤️" });
+        await api.toggleReaction({ conversation: persona, message_id: message.id, emoji });
       } catch {
         /* ignore */
       }
@@ -220,13 +231,13 @@ export default function ChatScreen() {
           name={parent ? nameFor(parent) : undefined}
           initial={parent ? initialFor(parent) : undefined}
           saved={savedIds.has(item.id)}
-          onSave={parent ? () => toggleSave(item) : undefined}
           reaction={reactions[item.id]}
-          onReact={parent ? () => toggleReact(item) : undefined}
+          onReact={parent ? (emoji) => setReactionEmoji(item, emoji) : undefined}
+          onOpenReactions={parent ? (layout) => setPicker({ message: item, layout }) : undefined}
         />
       );
     },
-    [messages, isGroup, nameFor, initialFor, savedIds, toggleSave, reactions, toggleReact],
+    [messages, isGroup, nameFor, initialFor, savedIds, reactions, setReactionEmoji],
   );
 
   const subtitle = typing
@@ -376,6 +387,23 @@ export default function ChatScreen() {
             {toast}
           </Text>
         </View>
+      ) : null}
+
+      {picker ? (
+        <ReactionPicker
+          layout={picker.layout}
+          current={reactions[picker.message.id]}
+          saved={savedIds.has(picker.message.id)}
+          onPick={(emoji) => {
+            setReactionEmoji(picker.message, emoji);
+            setPicker(null);
+          }}
+          onToggleSave={() => {
+            toggleSave(picker.message);
+            setPicker(null);
+          }}
+          onClose={() => setPicker(null)}
+        />
       ) : null}
     </View>
   );

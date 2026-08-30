@@ -15,9 +15,9 @@ export function ChatBubble({
   name,
   initial,
   saved = false,
-  onSave,
   reaction,
   onReact,
+  onOpenReactions,
 }: {
   message: Message;
   group?: boolean;
@@ -26,9 +26,9 @@ export function ChatBubble({
   name?: string;
   initial?: string;
   saved?: boolean;
-  onSave?: () => void;
   reaction?: string;
-  onReact?: () => void;
+  onReact?: (emoji: string) => void;
+  onOpenReactions?: (layout: { x: number; y: number; width: number; height: number }) => void;
 }) {
   const lastTap = useRef(0);
   const isUser = message.sender === "user";
@@ -50,14 +50,20 @@ export function ChatBubble({
 
   const persona = message.sender as "mom" | "dad";
   const p = PERSONAS[persona];
+  const bubbleRef = useRef<View>(null);
   const handlePress = () => {
     const now = Date.now();
     if (now - lastTap.current < 300) {
       lastTap.current = 0;
-      onReact?.();
+      onReact?.("❤️");
     } else {
       lastTap.current = now;
     }
+  };
+  const handleLongPress = () => {
+    bubbleRef.current?.measureInWindow((x, y, width, height) => {
+      onOpenReactions?.({ x, y, width, height });
+    });
   };
   return (
     <Animated.View
@@ -72,12 +78,12 @@ export function ChatBubble({
       ) : null}
       <View style={styles.leftContent}>
         {group && showMeta ? <Text style={[styles.name, { color: p.deep }]}>{name || p.name}</Text> : null}
-        <View style={styles.bubbleWrap}>
+        <View ref={bubbleRef} style={styles.bubbleWrap} collapsable={false}>
           <Pressable
             onPress={handlePress}
-            onLongPress={onSave}
-            delayLongPress={280}
-            testID={`bubble-save-${message.id}`}
+            onLongPress={handleLongPress}
+            delayLongPress={260}
+            testID={`bubble-press-${message.id}`}
             style={[styles.bubble, styles.parentBubble, { backgroundColor: p.color }]}
           >
             <Text style={[styles.text, { color: p.bubbleText }]}>{message.text}</Text>

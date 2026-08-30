@@ -65,6 +65,13 @@ coral #E59B86 Mom, blue #6E8FC4 Dad, clay #C08A61 group. See `/app/design_guidel
   haptic. Persisted per message via `/api/reactions/toggle` + `GET /api/reactions`; long-press still
   saves to Notes (two distinct gestures on the same bubble).
 
+## Implemented — Iteration 5 (2026-06)
+- **More Reactions (reaction picker)**: long-press any Mom/Dad message to open an iMessage-style
+  tap-back bar (❤️ 😂 🥹 👍 😮 😢) plus a Save/Saved bookmark. Picking an emoji sets/replaces the
+  reaction (re-pick the same one to clear); double-tap remains a quick ❤️. Bubble position is
+  measured via `measureInWindow` so the picker floats just above/below the message; `ReactionPicker`
+  overlay with dimmed backdrop. Backend toggle now switches emoji vs. clears on same-emoji re-pick.
+
 ## User Personas
 - Young adult / student living away from home who misses parental check-ins and encouragement.
 - Anyone wanting a warm daily wellbeing nudge (food/water/sleep) with an emotional companion.
