@@ -22,7 +22,6 @@ import {
   formatTime,
   greetingForTime,
   radius,
-  shadow,
   spacing,
 } from "@/src/constants/theme";
 import { api, Care, Checkin, Conversation } from "@/src/lib/api";
